@@ -14,6 +14,8 @@ public interface UserCouponMapper {
 
     int updateUsed(@Param("id") Long id, @Param("orderNo") String orderNo);
 
+    int restoreAvailable(@Param("id") Long id, @Param("userId") Long userId, @Param("orderNo") String orderNo);
+
     UserCoupon selectByUserIdAndCouponId(@Param("userId") Long userId, @Param("couponId") Long couponId);
 
     UserCoupon selectById(@Param("id") Long id, @Param("userId") Long userId);

@@ -29,5 +29,8 @@ jwt:
   secret: ${MALLU_JWT_SECRET}
   expiration: 86400000
 
+signature:
+  secret: ${MALLU_SIGNATURE_SECRET}
+
 seckill:
   async: true

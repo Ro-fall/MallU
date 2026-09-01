@@ -14,6 +14,12 @@ import java.util.TreeMap;
 @RequestMapping("/api/sign")
 public class SignController {
 
+    private final RequestSignService requestSignService;
+
+    public SignController(RequestSignService requestSignService) {
+        this.requestSignService = requestSignService;
+    }
+
     @PostMapping("/generate")
     public Result<SignGenerateResponse> generate(@RequestBody SignGenerateRequest request) {
         long timestamp = System.currentTimeMillis();
@@ -23,7 +29,7 @@ public class SignController {
         if (request.getBody() != null && !request.getBody().isBlank()) {
             params.put("body", request.getBody().trim());
         }
-        String sign = SignUtil.generateSignature(params, timestamp, nonce);
+        String sign = requestSignService.generateSignature(params, timestamp, nonce);
 
         SignGenerateResponse response = new SignGenerateResponse();
         response.setTimestamp(timestamp);

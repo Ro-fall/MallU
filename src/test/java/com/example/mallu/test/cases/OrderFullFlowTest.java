@@ -67,7 +67,7 @@ public class OrderFullFlowTest extends BaseApiTest {
     }
 
     @Test
-    @DisplayName("支付回调幂等：同一 tradeNo 重复回调返回流水号重复")
+    @DisplayName("支付回调幂等：同一 tradeNo 重复回调返回首次结果")
     void callbackIdempotent() {
         String username = registerAndLogin();
         Long addressId = createAddress("李四");
@@ -91,9 +91,10 @@ public class OrderFullFlowTest extends BaseApiTest {
         callback1.put("result", "SUCCESS");
         TestAssertions.assertSuccess(client.post("/api/payments/callback", callback1, false));
 
-        // 第二次回调：幂等拦截
+        // 第二次回调：支付平台的重试应该正常确认，而不是返回业务错误。
         ApiResponse callback2 = client.post("/api/payments/callback", callback1, false);
-        TestAssertions.assertCode(callback2, 4101);
-        TestAssertions.assertMessageContains(callback2, "支付流水号重复");
+        TestAssertions.assertSuccess(callback2);
+        TestAssertions.assertDataFieldEquals(callback2, "success", true);
+        TestAssertions.assertDataFieldEquals(callback2, "idempotent", true);
     }
 }

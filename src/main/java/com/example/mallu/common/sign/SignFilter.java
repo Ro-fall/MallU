@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class SignFilter implements Filter {
 
     private final StringRedisTemplate stringRedisTemplate;
+    private final RequestSignService requestSignService;
 
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
     private static final long TIME_WINDOW_MS = 5 * 60 * 1000;
@@ -108,7 +109,7 @@ public class SignFilter implements Filter {
                 params.put("body", body.trim());
             }
 
-            String expectedSign = SignUtil.generateSignature(params, timestamp, nonce);
+            String expectedSign = requestSignService.generateSignature(params, timestamp, nonce);
             if (!expectedSign.equalsIgnoreCase(sign)) {
                 errorMsg = "签名验证失败";
             }

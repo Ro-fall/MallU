@@ -134,7 +134,9 @@ public class OrderService {
             order.setDiscountAmount(discountAmount);
             order.setPayAmount(totalAmount.subtract(discountAmount));
 
-            userCouponMapper.updateUsed(userCoupon.getId(), order.getOrderNo());
+            if (userCouponMapper.updateUsed(userCoupon.getId(), order.getOrderNo()) == 0) {
+                throw new BusinessException(ResultCode.USER_COUPON_NOT_AVAILABLE);
+            }
         } else {
             order.setDiscountAmount(BigDecimal.ZERO);
             order.setPayAmount(totalAmount);
@@ -204,9 +206,12 @@ public class OrderService {
         if (order.getStatus() != 0) {
             throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "订单不是待支付状态");
         }
+        LocalDateTime payTime = LocalDateTime.now();
+        if (orderMapper.updateStatusIfExpected(order.getId(), order.getUserId(), 0, 1, payTime) == 0) {
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "订单状态已变化，请刷新后重试");
+        }
         order.setStatus(1);
-        order.setPayTime(LocalDateTime.now());
-        orderMapper.updateStatus(order);
+        order.setPayTime(payTime);
 
         // 如果是秒杀订单，同步更新秒杀订单状态为已支付
         SeckillOrder seckillOrder = seckillOrderMapper.selectByOrderId(orderId);
@@ -228,12 +233,19 @@ public class OrderService {
         if (order.getStatus() != 0) {
             throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "只有待支付订单可以取消");
         }
+        if (orderMapper.updateStatusIfExpected(order.getId(), order.getUserId(), 0, 2, null) == 0) {
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "订单状态已变化，请刷新后重试");
+        }
         order.setStatus(2);
-        orderMapper.updateStatus(order);
         // 回滚普通商品库存
         List<OrderItem> items = orderItemMapper.selectByOrderId(orderId);
         for (OrderItem item : items) {
             productMapper.increaseStock(item.getProductId(), item.getQuantity());
+        }
+
+        if (order.getCouponId() != null
+                && userCouponMapper.restoreAvailable(order.getCouponId(), userId, order.getOrderNo()) == 0) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "优惠券状态异常，取消订单失败");
         }
 
         // 如果是秒杀订单，额外回滚秒杀库存和 Redis
@@ -257,8 +269,10 @@ public class OrderService {
         if (order.getStatus() != 1) {
             throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "只有已支付订单可以完成");
         }
+        if (orderMapper.updateStatusIfExpected(order.getId(), order.getUserId(), 1, 3, order.getPayTime()) == 0) {
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "订单状态已变化，请刷新后重试");
+        }
         order.setStatus(3);
-        orderMapper.updateStatus(order);
         return getOrderVO(order);
     }
 

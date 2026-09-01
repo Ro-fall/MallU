@@ -3,7 +3,6 @@ package com.example.mallu.common.sign;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Map;
 import java.util.TreeMap;
@@ -14,16 +13,6 @@ public class SignUtil {
     public static final String SIGN_HEADER = "X-Sign";
     public static final String TIMESTAMP_HEADER = "X-Timestamp";
     public static final String NONCE_HEADER = "X-Nonce";
-
-    private static final String DEFAULT_SECRET = "MallU-Secret-Key-2026";
-
-    public static String getSecret() {
-        return DEFAULT_SECRET;
-    }
-
-    public static String generateSignature(Map<String, String> params, long timestamp, String nonce) {
-        return generateSignature(params, timestamp, nonce, getSecret());
-    }
 
     public static String generateSignature(Map<String, String> params, long timestamp, String nonce, String secret) {
         TreeMap<String, String> sortedParams = new TreeMap<>(params);

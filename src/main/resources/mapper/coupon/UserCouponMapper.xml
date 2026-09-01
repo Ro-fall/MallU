@@ -38,6 +38,15 @@
         WHERE id = #{id} AND status = 1
     </update>
 
+    <update id="restoreAvailable">
+        UPDATE user_coupon
+        SET status = 1, order_no = NULL, used_time = NULL, updated_at = NOW()
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND status = 2
+          AND order_no = #{orderNo}
+    </update>
+
     <select id="selectByUserIdAndCouponId" resultMap="BaseResultMap">
         SELECT id, user_id, coupon_id, status, order_no, used_time, created_at, updated_at, create_by, update_by
         FROM user_coupon

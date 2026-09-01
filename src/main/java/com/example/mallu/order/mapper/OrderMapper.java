@@ -24,4 +24,10 @@ public interface OrderMapper {
     Long countByUserId(Long userId);
 
     int updateStatus(Order order);
+
+    int updateStatusIfExpected(@Param("id") Long id,
+                               @Param("userId") Long userId,
+                               @Param("expectedStatus") Integer expectedStatus,
+                               @Param("status") Integer status,
+                               @Param("payTime") java.time.LocalDateTime payTime);
 }

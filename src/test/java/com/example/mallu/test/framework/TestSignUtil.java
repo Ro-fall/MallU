@@ -3,7 +3,6 @@ package com.example.mallu.test.framework;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.TreeMap;
 import java.util.Map;
 
@@ -13,7 +12,6 @@ import java.util.Map;
  */
 public class TestSignUtil {
 
-    public static final String SECRET = "MallU-Secret-Key-2026";
     public static final String SIGN_HEADER = "X-Sign";
     public static final String TIMESTAMP_HEADER = "X-Timestamp";
     public static final String NONCE_HEADER = "X-Nonce";
@@ -29,7 +27,7 @@ public class TestSignUtil {
         }
         sb.append("timestamp=").append(timestamp).append("\u0026");
         sb.append("nonce=").append(nonce);
-        return hmacSha256Hex(sb.toString(), SECRET);
+        return hmacSha256Hex(sb.toString(), getSecret());
     }
 
     public static String generateNonce() {
@@ -38,6 +36,14 @@ public class TestSignUtil {
 
     public static long currentTimestamp() {
         return System.currentTimeMillis();
+    }
+
+    private static String getSecret() {
+        String secret = System.getProperty("mallu.signature.secret", System.getenv("MALLU_SIGNATURE_SECRET"));
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("请通过 -Dmallu.signature.secret 或 MALLU_SIGNATURE_SECRET 配置测试签名密钥");
+        }
+        return secret;
     }
 
     private static String hmacSha256Hex(String data, String secret) {

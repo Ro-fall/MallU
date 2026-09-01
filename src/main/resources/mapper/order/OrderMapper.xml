@@ -73,6 +73,14 @@
         WHERE id = #{id} AND user_id = #{userId}
     </update>
 
+    <update id="updateStatusIfExpected">
+        UPDATE `order`
+        SET status = #{status}, pay_time = #{payTime}, updated_at = NOW()
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND status = #{expectedStatus}
+    </update>
+
     <select id="selectByIdForSystem" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>

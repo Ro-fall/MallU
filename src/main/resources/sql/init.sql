@@ -5,6 +5,8 @@ CREATE DATABASE IF NOT EXISTS mallu
 USE mallu;
 
 DROP TABLE IF EXISTS order_event_log;
+DROP TABLE IF EXISTS payment_flow;
+DROP TABLE IF EXISTS payment_flow;
 DROP TABLE IF EXISTS seckill_order;
 DROP TABLE IF EXISTS seckill_goods;
 DROP TABLE IF EXISTS seckill_activity;
@@ -187,6 +189,39 @@ CREATE TABLE order_event_log
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='订单事件日志表';
 
+CREATE TABLE payment_flow
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '支付回调流水ID',
+    trade_no    VARCHAR(64)    NOT NULL COMMENT '支付平台流水号',
+    order_no    VARCHAR(64)    NOT NULL COMMENT '业务订单号',
+    order_id    BIGINT         NOT NULL COMMENT '订单ID',
+    pay_amount  DECIMAL(12, 2) NOT NULL COMMENT '回调金额',
+    result      VARCHAR(16)    NOT NULL COMMENT 'SUCCESS/FAIL',
+    created_at  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_trade_no (trade_no),
+    INDEX idx_order_id (order_id),
+    FOREIGN KEY (order_id) REFERENCES `order` (id) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='支付回调幂等流水表';
+
+CREATE TABLE payment_flow
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '支付回调流水ID',
+    trade_no    VARCHAR(64)    NOT NULL COMMENT '支付平台流水号',
+    order_no    VARCHAR(64)    NOT NULL COMMENT '业务订单号',
+    order_id    BIGINT         NOT NULL COMMENT '订单ID',
+    pay_amount  DECIMAL(12, 2) NOT NULL COMMENT '回调金额',
+    result      VARCHAR(16)    NOT NULL COMMENT 'SUCCESS/FAIL',
+    created_at  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_trade_no (trade_no),
+    INDEX idx_order_id (order_id),
+    UNIQUE KEY uk_user_seckill_goods (user_id, seckill_goods_id),
+    FOREIGN KEY (order_id) REFERENCES `order` (id) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='支付回调幂等流水表';
+
 CREATE TABLE seckill_activity
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '活动ID',
@@ -235,6 +270,7 @@ CREATE TABLE seckill_order
     INDEX idx_user_id (user_id),
     INDEX idx_seckill_goods_id (seckill_goods_id),
     INDEX idx_order_id (order_id),
+    UNIQUE KEY uk_user_seckill_goods (user_id, seckill_goods_id),
     FOREIGN KEY (seckill_goods_id) REFERENCES seckill_goods (id) ON DELETE CASCADE,
     FOREIGN KEY (order_id) REFERENCES `order` (id) ON DELETE CASCADE
 ) ENGINE = InnoDB

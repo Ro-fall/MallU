@@ -141,7 +141,7 @@ public class SeckillService {
 
         // 同步模式：直接落库建订单（性能基线，用于压测对比）
         try {
-            SeckillOrder seckillOrder = seckillAsyncService.doCreateOrder(seckillGoodsId, userId, address.getId());
+            SeckillOrder seckillOrder = seckillAsyncService.createOrderSynchronously(seckillGoodsId, userId, address.getId());
             Order order = orderMapper.selectById(seckillOrder.getOrderId(), userId);
             SeckillOrderVO vo = new SeckillOrderVO();
             vo.setId(seckillOrder.getId());

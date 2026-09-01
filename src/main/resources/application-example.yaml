@@ -6,3 +6,6 @@ spring:
 
 jwt:
   secret: ${MALLU_JWT_SECRET}
+
+signature:
+  secret: ${MALLU_SIGNATURE_SECRET}
