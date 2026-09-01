@@ -19,5 +19,10 @@ public interface SeckillOrderMapper {
 
     int updateStatus(SeckillOrder seckillOrder);
 
+    /**
+     * 已取消的秒杀订单保留在普通订单表中用于追溯；删除秒杀资格记录，允许用户重新参与。
+     */
+    int deleteByOrderId(@Param("orderId") Long orderId);
+
     List<SeckillOrder> selectTimeoutOrders(@Param("timeoutMinutes") Integer timeoutMinutes);
 }

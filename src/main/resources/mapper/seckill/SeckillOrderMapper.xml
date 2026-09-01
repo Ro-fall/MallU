@@ -53,6 +53,12 @@
         WHERE id = #{id}
     </update>
 
+    <delete id="deleteByOrderId">
+        DELETE FROM seckill_order
+        WHERE order_id = #{orderId}
+          AND status = 1
+    </delete>
+
     <select id="selectTimeoutOrders" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>

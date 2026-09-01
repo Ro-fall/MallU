@@ -238,9 +238,8 @@ public class SeckillService {
         goodsMapper.increaseStock(seckillOrder.getSeckillGoodsId(), 1);
         seckillRedisService.recoverStock(seckillOrder.getSeckillGoodsId(), userId);
 
-        // 更新秒杀订单状态为已取消
-        seckillOrder.setStatus(3);
-        seckillOrderMapper.updateStatus(seckillOrder);
+        // 普通订单保留取消记录，释放秒杀资格以允许后续重新参与。
+        seckillOrderMapper.deleteByOrderId(order.getId());
     }
 
     private String generateOrderNo() {

@@ -253,8 +253,8 @@ public class OrderService {
         if (seckillOrder != null && seckillOrder.getUserId().equals(userId)) {
             seckillGoodsMapper.increaseStock(seckillOrder.getSeckillGoodsId(), 1);
             seckillRedisService.recoverStock(seckillOrder.getSeckillGoodsId(), userId);
-            seckillOrder.setStatus(3);
-            seckillOrderMapper.updateStatus(seckillOrder);
+            // 普通订单保留“已取消”状态；删除秒杀资格记录，才能在唯一约束下重新参与。
+            seckillOrderMapper.deleteByOrderId(orderId);
         }
 
         return getOrderVO(order);
