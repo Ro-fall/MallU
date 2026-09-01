@@ -89,6 +89,10 @@ $env:MALLU_SIGNATURE_SECRET = '替换为本地随机密钥'
 
 当前测试覆盖注册数据驱动测试、下单—支付—回调完整链路、支付重复回调幂等、优惠券领取后下单与取消返还、秒杀取消后重新参与，以及签名、空购物车、错误金额等负向场景。
 
+## CI 回归
+
+推送到 `main` 或创建面向 `main` 的 Pull Request 时，GitHub Actions 会在云端启动临时 MySQL、Redis 与 MallU 后端，执行 API 回归测试，并单独构建 Vue 前端。测试环境使用 workflow 中的专用临时凭据，不使用本地或生产凭据。
+
 ## 安全说明
 
 请勿提交 `application-local.yaml`、`.env`、数据库密码、JWT 密钥、请求签名密钥或构建产物。部署环境通过 `MALLU_DB_PASSWORD`、`MALLU_JWT_SECRET` 和 `MALLU_SIGNATURE_SECRET` 等环境变量注入配置。
