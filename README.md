@@ -60,13 +60,14 @@ npm run dev
 
 ## 数据库增量迁移
 
-已有本地数据时，不要再次执行 `init.sql`。请一次性执行：
+已有本地数据时，不要再次执行 `init.sql`。按版本顺序执行 `src/main/resources/sql/migration/` 下的迁移脚本；其中：
 
 ```text
-src/main/resources/sql/migration/V2__transaction_hardening.sql
+V2__transaction_hardening.sql：支付幂等和秒杀唯一约束
+V3__seed_demo_catalog.sql：补充商城演示商品、优惠券和秒杀商品
 ```
 
-该脚本会创建支付回调流水表，并补充秒杀一人一单唯一索引，不会删除已有数据。若索引创建提示存在历史重复秒杀记录，需要先人工去重。
+迁移脚本不会删除已有数据。若 V2 的索引创建提示存在历史重复秒杀记录，需要先人工去重。
 
 ## 自动化测试
 

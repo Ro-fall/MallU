@@ -279,16 +279,29 @@ CREATE TABLE seckill_order
 INSERT INTO product (name, description, price, stock, status, main_image)
 VALUES ('iPhone 15 Pro', '苹果最新旗舰手机', 7999.00, 100, 1, 'https://example.com/iphone15.jpg'),
        ('MacBook Air M3', '轻薄高性能笔记本', 8999.00, 50, 1, 'https://example.com/macbook.jpg'),
-       ('AirPods Pro 2', '主动降噪耳机', 1899.00, 200, 1, 'https://example.com/airpods.jpg');
+       ('AirPods Pro 2', '主动降噪耳机', 1899.00, 200, 1, 'https://example.com/airpods.jpg'),
+       ('iPad Air', 'M2 芯片，轻薄便携', 4799.00, 80, 1, NULL),
+       ('机械键盘 K87', '热插拔三模机械键盘', 399.00, 300, 1, NULL),
+       ('MX Master 3S', '静音高精度无线鼠标', 699.00, 150, 1, NULL),
+       ('小米智能台灯', '支持色温与亮度调节', 199.00, 220, 1, NULL),
+       ('Sony WH-1000XM5', '头戴式降噪耳机', 2499.00, 90, 1, NULL),
+       ('Kindle Paperwhite', '电子书阅读器 16GB', 1199.00, 120, 1, NULL),
+       ('罗技 C920 摄像头', '1080P 视频通话摄像头', 469.00, 180, 1, NULL),
+       ('Anker 充电宝', '10000mAh 双向快充', 229.00, 260, 1, NULL),
+       ('戴森吹风机 HD15', '高速吹风与智能温控', 3290.00, 60, 1, NULL);
 
 INSERT INTO coupon (name, type, threshold, discount_value, end_time, total_count, remaining_count)
 VALUES ('满1000减100', 1, 1000.00, 100.00, '2030-12-31 23:59:59', 100, 100),
        ('9折优惠券', 2, NULL, 0.90, '2030-12-31 23:59:59', 100, 100),
-       ('直减50元', 3, NULL, 50.00, '2030-12-31 23:59:59', 100, 100);
+       ('直减50元', 3, NULL, 50.00, '2030-12-31 23:59:59', 100, 100),
+       ('满300减30', 1, 300.00, 30.00, '2030-12-31 23:59:59', 200, 200),
+       ('新用户直减20元', 3, NULL, 20.00, '2030-12-31 23:59:59', 500, 500);
 
 INSERT INTO seckill_activity (name, start_time, end_time, status)
 VALUES ('618 手机秒杀', '2026-07-01 00:00:00', '2030-12-31 23:59:59', 1);
 
 INSERT INTO seckill_goods (activity_id, product_id, seckill_price, stock, total_stock)
 VALUES (1, 1, 4999.00, 10, 10),
-       (1, 2, 6999.00, 1, 1);
+       (1, 2, 6999.00, 1, 1),
+       (1, 4, 3699.00, 20, 20),
+       (1, 8, 1999.00, 30, 30);
