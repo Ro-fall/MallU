@@ -46,6 +46,18 @@ MallU 是一个用于练习交易系统开发与测试的电商后端项目，�
 
 4. 打开 Swagger：`http://localhost:8080/swagger-ui/index.html`。
 
+## Vue 演示前端
+
+前端位于 `web/`，使用 Vue 3 + Vite，通过开发服务器代理访问本地后端；它用于演示商品浏览、购物车、地址与优惠券结算、订单状态流转和秒杀。
+
+```powershell
+cd web
+npm install
+npm run dev
+```
+
+启动后访问 `http://127.0.0.1:5173/`。请先按上文启动 MallU 后端（默认 `8080` 端口）。生产部署时，需将 Vite 的 `/api` 代理替换为实际后端网关地址。
+
 ## 数据库增量迁移
 
 已有本地数据时，不要再次执行 `init.sql`。请一次性执行：
