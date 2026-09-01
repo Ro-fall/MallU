@@ -94,6 +94,21 @@ public class ApiClient {
         return signedSend("POST", path, jsonBody, idempotencyKey);
     }
 
+    public ApiResponse signedPostWithQuery(String path, Map<String, String> query) {
+        Map<String, String> signParams = new LinkedHashMap<>(query);
+        long timestamp = TestSignUtil.currentTimestamp();
+        String nonce = TestSignUtil.generateNonce();
+        String sign = TestSignUtil.generateSignature(signParams, timestamp, nonce);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        headers.set(TestSignUtil.TIMESTAMP_HEADER, String.valueOf(timestamp));
+        headers.set(TestSignUtil.NONCE_HEADER, nonce);
+        headers.set(TestSignUtil.SIGN_HEADER, sign);
+        return send("POST", path, query, headers.toSingleValueMap(), null, true);
+    }
+
     public ApiResponse signedPut(String path, String jsonBody, String idempotencyKey) {
         return signedSend("PUT", path, jsonBody, idempotencyKey);
     }

@@ -8,6 +8,7 @@ const cart = ref([])
 const orders = ref([])
 const addresses = ref([])
 const coupons = ref([])
+const couponCenter = ref([])
 const activities = ref([])
 const seckillGoods = ref([])
 const selectedCouponId = ref('')
@@ -62,7 +63,7 @@ async function signedRequest(path, method, body = null, params = {}) {
   })
 }
 
-async function loadProducts() { products.value = (await request('/products?page=1&size=12')).records || (await request('/products?page=1&size=12')).list || [] }
+async function loadProducts() { const data = await request('/products?page=1&size=12'); products.value = data.records || data.list || [] }
 async function loadCart() { if (hasLogin.value) cart.value = await request('/carts') }
 async function loadAddresses() {
   if (!hasLogin.value) return
@@ -70,6 +71,7 @@ async function loadAddresses() {
   if (!selectedAddressId.value && addresses.value[0]) selectedAddressId.value = String(addresses.value.find(a => a.isDefault === 1)?.id || addresses.value[0].id)
 }
 async function loadCoupons() { if (hasLogin.value) coupons.value = await request('/coupons/my/available') }
+async function loadCouponCenter() { if (hasLogin.value) couponCenter.value = await request('/coupons') }
 async function loadOrders() { if (hasLogin.value) { const data = await request('/orders?page=1&size=20'); orders.value = data.records || data.list || [] } }
 
 async function addCart(product) {
@@ -93,7 +95,17 @@ async function submitAuth() {
   } catch (e) { show(e.message, 'error') }
 }
 function logout() { token.value = ''; user.value = null; cart.value = []; orders.value = []; localStorage.removeItem('mallu_token'); localStorage.removeItem('mallu_user'); show('已退出登录') }
-async function refreshPrivateData() { await Promise.all([loadCart(), loadAddresses(), loadCoupons(), loadOrders(), loadActivities()]) }
+async function refreshPrivateData() { await Promise.all([loadCart(), loadAddresses(), loadCoupons(), loadCouponCenter(), loadOrders(), loadActivities()]) }
+
+function couponDescription(coupon) {
+  if (coupon.type === 1) return `满 ¥${Number(coupon.threshold).toFixed(0)} 可减 ¥${Number(coupon.discountValue).toFixed(0)}`
+  if (coupon.type === 2) return `${Number(coupon.discountValue * 10).toFixed(0)} 折优惠`
+  return `立减 ¥${Number(coupon.discountValue).toFixed(0)}`
+}
+async function claimCoupon(coupon) {
+  if (!ensureLogin()) return
+  try { await request(`/coupons/${coupon.id}/claim`, { method: 'POST' }); await Promise.all([loadCoupons(), loadCouponCenter()]); show(`已领取「${coupon.name}」`) } catch (e) { show(e.message, 'error') }
+}
 
 async function saveAddress() {
   try { await request('/addresses', { method: 'POST', body: JSON.stringify(addressForm.value) }); addressForm.value.detailAddress = ''; await loadAddresses(); show('地址已保存') } catch (e) { show(e.message, 'error') }
@@ -141,6 +153,7 @@ onMounted(async () => { loading.value = true; try { await loadProducts(); if (ha
       <button class="brand" @click="activeView = 'home'"><span>MU</span>MallU</button>
       <nav>
         <button :class="{ active: activeView === 'home' }" @click="activeView = 'home'">商品</button>
+        <button :class="{ active: activeView === 'coupons' }" @click="activeView = 'coupons'; loadCouponCenter()">优惠券</button>
         <button :class="{ active: activeView === 'cart' }" @click="activeView = 'cart'">购物车 <em v-if="cartCount">{{ cartCount }}</em></button>
         <button :class="{ active: activeView === 'orders' }" @click="activeView = 'orders'; loadOrders()">订单</button>
         <button :class="{ active: activeView === 'seckill' }" @click="activeView = 'seckill'; loadActivities()">限时秒杀</button>
@@ -163,6 +176,13 @@ onMounted(async () => { loading.value = true; try { await loadProducts(); if (ha
             <div class="product-info"><p>{{ product.name }}</p><small>{{ product.description || '品质好物，现货发售' }}</small><div><strong>¥{{ Number(product.price).toFixed(2) }}</strong><button @click="addCart(product)">加入购物车</button></div></div>
           </article>
         </div>
+      </section>
+
+      <section v-else-if="activeView === 'coupons'" class="workspace">
+        <div class="section-title"><div><p class="eyebrow">COUPON CENTER</p><h2>领券后，下单时自动可选</h2></div><span>每种券每人限领一次</span></div>
+        <div v-if="!hasLogin" class="empty">登录后可以领取并使用优惠券。<button class="link" @click="authOpen = true">去登录</button></div>
+        <div v-else-if="!couponCenter.length" class="empty">暂时没有可领取的优惠券。</div>
+        <div v-else class="coupon-grid"><article v-for="coupon in couponCenter" :key="coupon.id" class="coupon-card"><div class="coupon-value"><span v-if="coupon.type === 2">{{ Number(coupon.discountValue * 10).toFixed(0) }}折</span><span v-else>¥{{ Number(coupon.discountValue).toFixed(0) }}</span></div><div class="coupon-copy"><b>{{ coupon.name }}</b><small>{{ couponDescription(coupon) }}</small><small>剩余 {{ coupon.remainingCount }} 张</small></div><button class="primary small" @click="claimCoupon(coupon)">立即领取</button></article></div>
       </section>
 
       <section v-else-if="activeView === 'cart'" class="workspace two-columns">
