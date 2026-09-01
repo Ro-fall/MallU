@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优选交易平台 - 测试页面</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.2/dist/axios.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: #333; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card h2 { margin-top: 0; color: #555; font-size: 18px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; font-weight: 500; color: #666; }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        button { background: #1890ff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px; }
+        button:hover { background: #40a9ff; }
+        button.danger { background: #ff4d4f; }
+        button.danger:hover { background: #ff7875; }
+        .token-box { background: #f6ffed; border: 1px solid #b7eb8f; padding: 10px; border-radius: 4px; margin-bottom: 16px; word-break: break-all; font-size: 13px; }
+        .result { background: #f0f2f5; border: 1px solid #d9d9d9; padding: 12px; border-radius: 4px; margin-top: 12px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 300px; min-height: 60px; overflow-y: auto; }
+        .fixed-result { min-height: 80px; }
+        .button-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .error { background: #fff1f0; border-color: #ffa39e; color: #cf1322; }
+        .success { background: #f6ffed; border-color: #b7eb8f; color: #389e0d; }
+        .address-item { border: 1px solid #e8e8e8; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
+        .address-item .default { color: #1890ff; font-weight: bold; }
+        .product-item { border: 1px solid #e8e8e8; padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .product-info { flex: 1; }
+        .product-name { font-weight: bold; color: #333; font-size: 15px; }
+        .product-price { color: #ff4d4f; font-weight: bold; font-size: 16px; }
+        .product-stock { color: #666; font-size: 13px; }
+        .cart-item { border: 1px solid #e8e8e8; padding: 10px; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .cart-item input { width: 60px; text-align: center; }
+        .order-item { border: 1px solid #e8e8e8; padding: 12px; margin-bottom: 10px; border-radius: 4px; }
+        .order-status { color: #1890ff; font-weight: bold; }
+        .order-amount { color: #ff4d4f; font-weight: bold; font-size: 15px; }
+        .actions { margin-top: 8px; }
+        .full-width { grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>优选交易平台 - 接口测试</h1>
+
+        <div class="token-box">
+            <strong>当前 Token:</strong> <span id="currentToken">未登录</span>
+        </div>
+
+        <div class="token-box" style="background: #e6f7ff; border-color: #91d5ff;">
+            <strong>幂等 Token:</strong> <span id="idempotentToken">未获取</span>
+            <button onclick="fetchIdempotentToken()" style="margin-left: 10px;">获取幂等 Token</button>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>注册</h2>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="regUsername" placeholder="4-32位">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="regPassword" placeholder="6-32位">
+                </div>
+                <div class="form-group">
+                    <label>手机号</label>
+                    <input type="text" id="regPhone" placeholder="11位手机号">
+                </div>
+                <div class="form-group">
+                    <label>邮箱</label>
+                    <input type="text" id="regEmail" placeholder="可选">
+                </div>
+                <button onclick="register()">注册</button>
+                <div id="regResult" class="result"></div>
+            </div>
+
+            <div class="card">
+                <h2>登录</h2>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="loginUsername" placeholder="用户名">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="loginPassword" placeholder="密码">
+                </div>
+                <button onclick="login()">登录</button>
+                <div id="loginResult" class="result"></div>
+            </div>
+
+            <div class="card">
+                <h2>当前用户</h2>
+                <button onclick="getCurrentUser()">获取当前用户</button>
+                <div id="userResult" class="result"></div>
+            </div>
+
+            <div class="card">
+                <h2>添加地址</h2>
+                <div class="form-group">
+                    <label>收货人</label>
+                    <input type="text" id="addrName">
+                </div>
+                <div class="form-group">
+                    <label>手机号</label>
+                    <input type="text" id="addrPhone">
+                </div>
+                <div class="form-group">
+                    <label>省</label>
+                    <input type="text" id="addrProvince">
+                </div>
+                <div class="form-group">
+                    <label>市</label>
+                    <input type="text" id="addrCity">
+                </div>
+                <div class="form-group">
+                    <label>区/县</label>
+                    <input type="text" id="addrDistrict">
+                </div>
+                <div class="form-group">
+                    <label>详细地址</label>
+                    <textarea id="addrDetail" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="addrDefault"> 设为默认
+                    </label>
+                </div>
+                <button onclick="addAddress()">添加地址</button>
+                <div id="addrResult" class="result"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>地址列表</h2>
+                <button onclick="listAddresses()">刷新列表</button>
+                <div id="addressList"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>商品列表</h2>
+                <button onclick="listProducts()">刷新商品</button>
+                <div id="productList"></div>
+            </div>
+
+            <div class="card">
+                <h2>加入购物车</h2>
+                <div class="form-group">
+                    <label>商品ID</label>
+                    <input type="number" id="cartProductId" placeholder="从商品列表复制">
+                </div>
+                <div class="form-group">
+                    <label>数量</label>
+                    <input type="number" id="cartQuantity" value="1" min="1">
+                </div>
+                <button onclick="addToCart()">加入购物车</button>
+                <div id="cartAddResult" class="result"></div>
+            </div>
+
+            <div class="card">
+                <h2>创建订单</h2>
+                <div class="form-group">
+                    <label>地址ID</label>
+                    <input type="number" id="orderAddressId" placeholder="从地址列表复制">
+                </div>
+                <div class="form-group">
+                    <label>我的优惠券ID（可选）</label>
+                    <input type="number" id="orderCouponId" placeholder="从我的优惠券复制">
+                </div>
+                <button onclick="createOrder()">创建订单</button>
+                <button onclick="testIdempotent()" style="background: #52c41a;">并发幂等测试（2次）</button>
+                <div id="orderCreateResult" class="result fixed-result"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>优惠券列表</h2>
+                <button onclick="listCoupons()">刷新优惠券</button>
+                <div id="couponList" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>我的优惠券</h2>
+                <button onclick="listMyCoupons()">刷新我的优惠券</button>
+                <div id="myCouponList" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>购物车</h2>
+                <button onclick="listCart()">刷新购物车</button>
+                <div id="cartList" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>订单列表</h2>
+                <button onclick="listOrders()">刷新订单</button>
+                <div id="orderList" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>支付回调测试（模拟支付平台）</h2>
+                <div class="form-group">
+                    <label>订单号</label>
+                    <input type="text" id="payOrderNo" placeholder="从订单列表复制">
+                </div>
+                <div class="form-group">
+                    <label>支付金额</label>
+                    <input type="number" id="payAmount" step="0.01" placeholder="与订单实付金额一致">
+                </div>
+                <div class="form-group">
+                    <label>支付流水号 tradeNo</label>
+                    <input type="text" id="payTradeNo" placeholder="如 TRADE20260101001">
+                </div>
+                <div class="form-group">
+                    <label>支付结果</label>
+                    <select id="payResult">
+                        <option value="SUCCESS">SUCCESS</option>
+                        <option value="FAIL">FAIL</option>
+                    </select>
+                </div>
+                <button onclick="sendPayCallback()">发送支付回调</button>
+                <button onclick="sendDuplicatePayCallback()" class="danger">发送重复回调（测试幂等）</button>
+                <div id="payCallbackResult" class="result fixed-result"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>订单事件日志</h2>
+                <div class="form-group">
+                    <label>订单ID</label>
+                    <input type="number" id="eventOrderId" placeholder="从订单列表复制">
+                </div>
+                <button onclick="listOrderEvents()">查询事件日志</button>
+                <div id="orderEventList" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>秒杀活动</h2>
+                <button onclick="listSeckillActivities()">刷新活动</button>
+                <div id="seckillActivityList" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="card full-width">
+                <h2>秒杀商品</h2>
+                <div class="form-group">
+                    <label>活动ID</label>
+                    <input type="number" id="seckillActivityId" placeholder="从活动列表复制">
+                </div>
+                <button onclick="listSeckillGoods()">刷新商品</button>
+                <div id="seckillGoodsList" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="card">
+                <h2>秒杀下单</h2>
+                <div class="form-group">
+                    <label>秒杀商品ID</label>
+                    <input type="number" id="seckillGoodsId" placeholder="从商品列表复制">
+                </div>
+                <div class="form-group">
+                    <label>地址ID</label>
+                    <input type="number" id="seckillAddressId" placeholder="从地址列表复制">
+                </div>
+                <button onclick="seckillOrder()">立即秒杀</button>
+                <div id="seckillResult" class="result fixed-result"></div>
+            </div>
+
+            <div class="card">
+                <h2>并发秒杀测试</h2>
+                <div class="form-group">
+                    <label>秒杀商品ID</label>
+                    <input type="number" id="stressSeckillGoodsId" placeholder="从商品列表复制">
+                </div>
+                <div class="form-group">
+                    <label>并发数</label>
+                    <input type="number" id="stressCount" value="10" min="2" max="100">
+                </div>
+                <div class="form-group">
+                    <label>地址ID</label>
+                    <input type="number" id="stressAddressId" placeholder="从地址列表复制">
+                </div>
+                <button onclick="stressSeckill()" style="background: #52c41a;">开始并发测试</button>
+                <div id="stressResult" class="result fixed-result"></div>
+            </div>
+            <div class="card full-width">
+                <h2>接口签名测试</h2>
+                <div class="form-group">
+                    <label>请求方法</label>
+                    <select id="signTestMethod">
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>请求路径（如 /api/orders）</label>
+                    <input type="text" id="signTestPath" value="/api/orders">
+                </div>
+                <div class="form-group">
+                    <label>Query 参数（JSON，如 {"addressId":"1"}）</label>
+                    <textarea id="signTestParams" rows="2">{}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Body（JSON，如 {"addressId":1}）</label>
+                    <textarea id="signTestBody" rows="2">{}</textarea>
+                </div>
+                <button onclick="generateSignTest()">生成签名</button>
+                <button onclick="sendSignTest()">发送正常签名请求</button>
+                <button onclick="sendBadSignTest()" class="danger">发送错误签名请求</button>
+                <div id="signTestResult" class="result fixed-result"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const api = axios.create({ baseURL: '/api' });
+        let token = localStorage.getItem('token') || '';
+
+        if (token) {
+            document.getElementById('currentToken').textContent = token;
+        }
+
+        api.interceptors.request.use(config => {
+            if (token) {
+                config.headers.Authorization = 'Bearer ' + token;
+            }
+            return config;
+        });
+
+        function showResult(id, data, isError) {
+            const el = document.getElementById(id);
+            el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+            el.className = 'result ' + (isError ? 'error' : 'success');
+        }
+
+        async function register() {
+            try {
+                const res = await api.post('/users/register', {
+                    username: document.getElementById('regUsername').value,
+                    password: document.getElementById('regPassword').value,
+                    phone: document.getElementById('regPhone').value,
+                    email: document.getElementById('regEmail').value
+                });
+                token = res.data.data.token;
+                localStorage.setItem('token', token);
+                document.getElementById('currentToken').textContent = token;
+                showResult('regResult', res.data, false);
+            } catch (e) {
+                showResult('regResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function login() {
+            try {
+                const res = await api.post('/users/login', {
+                    username: document.getElementById('loginUsername').value,
+                    password: document.getElementById('loginPassword').value
+                });
+                token = res.data.data.token;
+                localStorage.setItem('token', token);
+                document.getElementById('currentToken').textContent = token;
+                showResult('loginResult', res.data, false);
+            } catch (e) {
+                showResult('loginResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function getCurrentUser() {
+            try {
+                const res = await api.get('/users/me');
+                showResult('userResult', res.data, false);
+            } catch (e) {
+                showResult('userResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function addAddress() {
+            try {
+                const res = await api.post('/addresses', {
+                    receiverName: document.getElementById('addrName').value,
+                    phone: document.getElementById('addrPhone').value,
+                    province: document.getElementById('addrProvince').value,
+                    city: document.getElementById('addrCity').value,
+                    district: document.getElementById('addrDistrict').value,
+                    detailAddress: document.getElementById('addrDetail').value,
+                    isDefault: document.getElementById('addrDefault').checked ? 1 : 0
+                });
+                showResult('addrResult', res.data, false);
+                listAddresses();
+            } catch (e) {
+                showResult('addrResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function listAddresses() {
+            try {
+                const res = await api.get('/addresses');
+                const list = res.data.data || [];
+                const container = document.getElementById('addressList');
+                container.innerHTML = '';
+                list.forEach(addr => {
+                    const div = document.createElement('div');
+                    div.className = 'address-item';
+                    div.innerHTML = `
+                        <div>${addr.receiverName} ${addr.phone} ${addr.isDefault ? '<span class="default">[默认]</span>' : ''}</div>
+                        <div>${addr.province} ${addr.city} ${addr.district} ${addr.detailAddress}</div>
+                        <div class="actions">
+                            <button onclick="setDefault(${addr.id})">设为默认</button>
+                            <button class="danger" onclick="deleteAddress(${addr.id})">删除</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                document.getElementById('addressList').innerHTML = '<div class="result error">' + JSON.stringify(e.response?.data || e.message) + '</div>';
+            }
+        }
+
+        async function setDefault(id) {
+            try {
+                await api.put('/addresses/' + id + '/default');
+                listAddresses();
+            } catch (e) {
+                alert('设置默认失败: ' + JSON.stringify(e.response?.data || e.message));
+            }
+        }
+
+        async function deleteAddress(id) {
+            if (!confirm('确定删除该地址？')) return;
+            try {
+                await api.delete('/addresses/' + id);
+                listAddresses();
+            } catch (e) {
+                alert('删除失败: ' + JSON.stringify(e.response?.data || e.message));
+            }
+        }
+
+        async function listProducts() {
+            try {
+                const res = await api.get('/products');
+                const data = res.data.data || {};
+                const list = data.list || [];
+                const container = document.getElementById('productList');
+                container.innerHTML = '';
+                list.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'product-item';
+                    div.innerHTML = `
+                        <div class="product-info">
+                            <div class="product-name">${p.name}</div>
+                            <div>${p.description || ''}</div>
+                            <div class="product-price">¥${p.price}</div>
+                            <div class="product-stock">库存: ${p.stock}</div>
+                            <div class="product-stock">ID: ${p.id}</div>
+                        </div>
+                        <div>
+                            <button onclick="document.getElementById('cartProductId').value='${p.id}'">填入购物车</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                document.getElementById('productList').innerHTML = '<div class="result error">' + JSON.stringify(e.response?.data || e.message) + '</div>';
+            }
+        }
+
+        async function addToCart() {
+            try {
+                const res = await api.post('/carts', {
+                    productId: Number(document.getElementById('cartProductId').value),
+                    quantity: Number(document.getElementById('cartQuantity').value)
+                });
+                showResult('cartAddResult', res.data, false);
+                listCart();
+            } catch (e) {
+                showResult('cartAddResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function listCart() {
+            try {
+                const res = await api.get('/carts');
+                const list = res.data.data || [];
+                const container = document.getElementById('cartList');
+                container.innerHTML = '';
+                list.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'cart-item';
+                    div.innerHTML = `
+                        <div>
+                            <div><strong>${item.productName}</strong></div>
+                            <div>单价: ¥${item.productPrice} | 库存: ${item.stock}</div>
+                        </div>
+                        <div>
+                            数量: <input type="number" id="qty_${item.id}" value="${item.quantity}" min="1">
+                            <button onclick="updateCart(${item.id})">更新</button>
+                            <button class="danger" onclick="deleteCart(${item.id})">删除</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                document.getElementById('cartList').innerHTML = '<div class="result error">' + JSON.stringify(e.response?.data || e.message) + '</div>';
+            }
+        }
+
+        async function updateCart(id) {
+            try {
+                const qty = Number(document.getElementById('qty_' + id).value);
+                await api.put('/carts/' + id, { quantity: qty });
+                listCart();
+            } catch (e) {
+                alert('更新失败: ' + JSON.stringify(e.response?.data || e.message));
+            }
+        }
+
+        async function deleteCart(id) {
+            if (!confirm('确定从购物车删除？')) return;
+            try {
+                await api.delete('/carts/' + id);
+                listCart();
+            } catch (e) {
+                alert('删除失败: ' + JSON.stringify(e.response?.data || e.message));
+            }
+        }
+
+        async function createOrder() {
+            try {
+                const idemToken = await getIdempotentToken();
+                console.log('创建订单使用幂等 Token:', idemToken);
+                if (!idemToken) {
+                    showResult('orderCreateResult', '获取幂等 Token 失败', true);
+                    return;
+                }
+                const addressId = Number(document.getElementById('orderAddressId').value);
+                const couponIdValue = document.getElementById('orderCouponId').value;
+                const payload = { addressId };
+                if (couponIdValue) {
+                    payload.couponId = Number(couponIdValue);
+                }
+                const res = await apiPost('/api/orders', payload, idemToken);
+                showResult('orderCreateResult', res.data, false);
+                listOrders();
+                listCart();
+                listMyCoupons();
+            } catch (e) {
+                showResult('orderCreateResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function testIdempotent() {
+            try {
+                const idemToken = await getIdempotentToken();
+                console.log('并发测试使用同一个幂等 Token:', idemToken);
+                if (!idemToken) {
+                    showResult('orderCreateResult', '获取幂等 Token 失败', true);
+                    return;
+                }
+                const addressId = Number(document.getElementById('orderAddressId').value);
+                const couponIdValue = document.getElementById('orderCouponId').value;
+                const payload = { addressId };
+                if (couponIdValue) {
+                    payload.couponId = Number(couponIdValue);
+                }
+                const sendRequest = () => apiPost('/api/orders', payload, idemToken);
+                const results = await Promise.allSettled([sendRequest(), sendRequest()]);
+                const output = results.map((r, i) => {
+                    if (r.status === 'fulfilled') {
+                        return `请求${i + 1} 成功: ` + JSON.stringify(r.value.data, null, 2);
+                    } else {
+                        return `请求${i + 1} 失败: ` + JSON.stringify(r.reason.response?.data || r.reason.message);
+                    }
+                }).join('\n---\n');
+                showResult('orderCreateResult', output, false);
+                listOrders();
+                listCart();
+                listMyCoupons();
+            } catch (e) {
+                showResult('orderCreateResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function apiPost(url, payload, idemToken) {
+            return signedFetch('POST', url, payload, idemToken);
+        }
+
+        async function signedFetch(method, url, body, idemToken) {
+            const queryIndex = url.indexOf('?');
+            let path = url;
+            let queryParams = {};
+            if (queryIndex !== -1) {
+                path = url.substring(0, queryIndex);
+                const queryString = url.substring(queryIndex + 1);
+                queryString.split('&').forEach(pair => {
+                    const [k, v] = pair.split('=');
+                    if (k) queryParams[decodeURIComponent(k)] = decodeURIComponent(v || '');
+                });
+            }
+
+            const bodyString = body ? JSON.stringify(body) : null;
+            const signRes = await api.post('/sign/generate', {
+                method,
+                path,
+                params: queryParams,
+                body: bodyString
+            });
+            const signInfo = signRes.data.data;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+                'X-Timestamp': signInfo.timestamp,
+                'X-Nonce': signInfo.nonce,
+                'X-Sign': signInfo.sign
+            };
+            if (idemToken) {
+                headers['Idempotency-Key'] = idemToken;
+            }
+
+            const options = { method, headers };
+            if (body !== null && body !== undefined) {
+                options.body = JSON.stringify(body);
+            }
+
+            const res = await fetch(url, options);
+            const data = await res.json();
+            if (!res.ok) {
+                const error = new Error(data.message || '请求失败');
+                error.response = { data };
+                throw error;
+            }
+            return { data };
+        }
+
+        async function getIdempotentToken() {
+            const res = await api.get('/idempotent/token');
+            console.log('幂等 Token 接口返回:', res.data);
+            if (res.data.code !== 200) {
+                throw { response: { data: res.data } };
+            }
+            const token = res.data.data;
+            document.getElementById('idempotentToken').textContent = token || 'undefined';
+            return token;
+        }
+
+        function getCouponTypeText(type) {
+            const map = { 1: '满减', 2: '折扣', 3: '直减' };
+            return map[type] || '未知';
+        }
+
+        async function listCoupons() {
+            try {
+                const res = await api.get('/coupons');
+                console.log('优惠券接口返回:', res.data);
+                const list = res.data.data || [];
+                const container = document.getElementById('couponList');
+                container.innerHTML = '';
+                if (list.length === 0) {
+                    container.innerHTML = '<div class="result">暂无可用优惠券</div>';
+                    return;
+                }
+                list.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = 'address-item';
+                    let desc = '';
+                    if (c.type === 1) desc = `满 ${c.threshold} 减 ${c.discountValue}`;
+                    else if (c.type === 2) desc = `${c.discountValue * 10} 折`;
+                    else if (c.type === 3) desc = `直减 ${c.discountValue}`;
+                    div.innerHTML = `
+                        <div><strong>${c.name}</strong> [${getCouponTypeText(c.type)}]</div>
+                        <div>${desc} | 剩余: ${c.remainingCount}</div>
+                        <div class="actions">
+                            <button onclick="claimCoupon(${c.id})">领取</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                console.error('刷新优惠券失败:', e);
+                document.getElementById('couponList').innerHTML = '<div class="result error">' + JSON.stringify(e.response?.data || e.message) + '</div>';
+            }
+        }
+
+        async function claimCoupon(id) {
+            try {
+                await api.post('/coupons/' + id + '/claim');
+                listCoupons();
+                listMyCoupons();
+            } catch (e) {
+                alert('领取失败: ' + JSON.stringify(e.response?.data || e.message));
+            }
+        }
+
+        async function listMyCoupons() {
+            try {
+                const res = await api.get('/coupons/my/available');
+                const list = res.data.data || [];
+                const container = document.getElementById('myCouponList');
+                container.innerHTML = '';
+                list.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = 'address-item';
+                    div.innerHTML = `
+                        <div><strong>${c.couponName}</strong> [${getCouponTypeText(c.couponType)}] ID: ${c.id}</div>
+                        <div>状态: ${c.status === 1 ? '未使用' : '已使用'}</div>
+                        <div class="actions">
+                            <button onclick="document.getElementById('orderCouponId').value='${c.id}'">填入订单</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                document.getElementById('myCouponList').innerHTML = '<div class="result error">' + JSON.stringify(e.response?.data || e.message) + '</div>';
+            }
+        }
+
+        function getStatusText(status) {
+            const map = { 0: '待支付', 1: '已支付', 2: '已取消', 3: '已完成' };
+            return map[status] || '未知';
+        }
+
+        async function listOrders() {
+            try {
+                const res = await api.get('/orders');
+                const data = res.data.data || {};
+                const list = data.list || [];
+                const container = document.getElementById('orderList');
+                container.innerHTML = '';
+                list.forEach(order => {
+                    const div = document.createElement('div');
+                    div.className = 'order-item';
+                    const items = (order.items || []).map(item =>
+                        `<div>${item.productName} x ${item.quantity} = ¥${item.totalPrice}</div>`
+                    ).join('');
+                    div.innerHTML = `
+                        <div>订单号: ${order.orderNo}</div>
+                        <div>商品总额: ¥${order.totalAmount}</div>
+                        <div>优惠金额: ¥${order.discountAmount}</div>
+                        <div>实付金额: <span class="order-amount">¥${order.payAmount}</span></div>
+                        <div>状态: <span class="order-status">${getStatusText(order.status)}</span></div>
+                        <div>下单时间: ${order.createdAt}</div>
+                        <div style="margin-top:8px;">${items}</div>
+                        <div class="actions">
+                            <button onclick="payOrder(${order.id})" ${order.status !== 0 ? 'disabled' : ''}>支付</button>
+                            <button onclick="cancelOrder(${order.id})" ${order.status !== 0 ? 'disabled' : ''}>取消</button>
+                            <button onclick="completeOrder(${order.id})" ${order.status !== 1 ? 'disabled' : ''}>完成</button>
+                            <button onclick="document.getElementById('eventOrderId').value='${order.id}'">填入事件日志</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                document.getElementById('orderList').innerHTML = '<div class="result error">' + JSON.stringify(e.response?.data || e.message) + '</div>';
+            }
+        }
+
+        async function payOrder(id) {
+            try {
+                const idemToken = await getIdempotentToken();
+                await signedFetch('PUT', '/api/orders/' + id + '/pay', null, idemToken);
+                listOrders();
+            } catch (e) {
+                alert('支付失败: ' + JSON.stringify(e.response?.data || e.message));
+            }
+        }
+
+        async function cancelOrder(id) {
+            if (!confirm('确定取消订单？')) return;
+            try {
+                await api.put('/orders/' + id + '/cancel');
+                listOrders();
+            } catch (e) {
+                alert('取消失败: ' + JSON.stringify(e.response?.data || e.message));
+            }
+        }
+
+        async function completeOrder(id) {
+            try {
+                await api.put('/orders/' + id + '/complete');
+                listOrders();
+            } catch (e) {
+                alert('完成失败: ' + JSON.stringify(e.response?.data || e.message));
+            }
+        }
+
+        async function listOrderEvents() {
+            try {
+                const orderId = document.getElementById('eventOrderId').value;
+                if (!orderId) {
+                    showResult('orderEventList', '请填写订单ID', true);
+                    return;
+                }
+                const res = await api.get('/orders/' + orderId + '/events');
+                const list = res.data.data || [];
+                const container = document.getElementById('orderEventList');
+                container.innerHTML = '';
+                if (list.length === 0) {
+                    container.innerHTML = '<div class="result">暂无事件日志</div>';
+                    return;
+                }
+                list.forEach(event => {
+                    const div = document.createElement('div');
+                    div.className = 'address-item';
+                    div.innerHTML = `
+                        <div><strong>${event.eventType}</strong> ${event.status === 1 ? '成功' : '失败'}</div>
+                        <div>${event.content}</div>
+                        <div>${event.createdAt}</div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                document.getElementById('orderEventList').innerHTML = '<div class="result error">' + JSON.stringify(e.response?.data || e.message) + '</div>';
+            }
+        }
+
+        async function listSeckillActivities() {
+            try {
+                const res = await api.get('/seckill/activities');
+                const list = res.data.data || [];
+                const container = document.getElementById('seckillActivityList');
+                container.innerHTML = '';
+                if (list.length === 0) {
+                    container.innerHTML = '<div class="result">暂无秒杀活动</div>';
+                    return;
+                }
+                list.forEach(a => {
+                    const div = document.createElement('div');
+                    div.className = 'address-item';
+                    div.innerHTML = `
+                        <div><strong>${a.name}</strong> ID: ${a.id}</div>
+                        <div>时间: ${a.startTime} ~ ${a.endTime}</div>
+                        <div class="actions">
+                            <button onclick="document.getElementById('seckillActivityId').value='${a.id}'">填入活动</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                document.getElementById('seckillActivityList').innerHTML = '<div class="result error">' + JSON.stringify(e.response?.data || e.message) + '</div>';
+            }
+        }
+
+        async function listSeckillGoods() {
+            try {
+                const activityId = document.getElementById('seckillActivityId').value;
+                if (!activityId) {
+                    showResult('seckillResult', '请先填写活动ID', true);
+                    return;
+                }
+                const res = await api.get('/seckill/activities/' + activityId + '/goods');
+                const list = res.data.data || [];
+                const container = document.getElementById('seckillGoodsList');
+                container.innerHTML = '';
+                if (list.length === 0) {
+                    container.innerHTML = '<div class="result">暂无秒杀商品</div>';
+                    return;
+                }
+                list.forEach(g => {
+                    const div = document.createElement('div');
+                    div.className = 'product-item';
+                    div.innerHTML = `
+                        <div class="product-info">
+                            <div class="product-name">${g.productName}</div>
+                            <div>原价: ¥${g.originalPrice} | 秒杀价: <span class="product-price">¥${g.seckillPrice}</span></div>
+                            <div>剩余库存: ${g.remainingStock != null ? g.remainingStock : g.stock} / ${g.totalStock}</div>
+                            <div>ID: ${g.id}</div>
+                        </div>
+                        <div>
+                            <button onclick="document.getElementById('seckillGoodsId').value='${g.id}'">填入秒杀</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+                showResult('seckillResult', '商品加载成功', false);
+            } catch (e) {
+                showResult('seckillResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function seckillOrder() {
+            try {
+                const goodsId = document.getElementById('seckillGoodsId').value;
+                const addressId = document.getElementById('seckillAddressId').value;
+                if (!goodsId || !addressId) {
+                    showResult('seckillResult', '请填写秒杀商品ID和地址ID', true);
+                    return;
+                }
+                const url = '/api/seckill/goods/' + goodsId + '/seckill?addressId=' + addressId;
+                const res = await signedFetch('POST', url, null, null);
+                showResult('seckillResult', res.data, false);
+                listSeckillGoods();
+
+                // 秒杀已异步化：轮询查询结果
+                await pollSeckillResult(goodsId);
+            } catch (e) {
+                showResult('seckillResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function pollSeckillResult(goodsId) {
+            for (let i = 0; i < 30; i++) {
+                await new Promise(r => setTimeout(r, 500));
+                const res = await api.get('/seckill/result/' + goodsId);
+                const data = res.data.data;
+                if (data && data.status === 0) {
+                    continue;
+                }
+                showResult('seckillResult', { message: '秒杀结果已就绪', data }, false);
+                listOrders();
+                return;
+            }
+            showResult('seckillResult', { message: '秒杀结果等待超时，请稍后到订单列表查看' }, true);
+        }
+
+        async function stressSeckill() {
+            try {
+                const goodsId = document.getElementById('stressSeckillGoodsId').value;
+                const addressId = document.getElementById('stressAddressId').value;
+                const count = Number(document.getElementById('stressCount').value);
+                if (!goodsId || !addressId || count < 2) {
+                    showResult('stressResult', '请填写完整信息，并发数至少为2', true);
+                    return;
+                }
+
+                showResult('stressResult', '并发测试中，请稍候...', false);
+                const url = '/api/seckill/goods/' + goodsId + '/seckill?addressId=' + addressId;
+                const requests = [];
+                for (let i = 0; i < count; i++) {
+                    requests.push(
+                        signedFetch('POST', url, null, null)
+                            .then(res => ({ success: true, data: res.data }))
+                            .catch(e => ({ success: false, error: e.response?.data || e.message }))
+                    );
+                }
+
+                const results = await Promise.all(requests);
+                const successCount = results.filter(r => r.success).length;
+                const failCount = results.filter(r => !r.success).length;
+                const stockEmpty = results.filter(r => !r.success && r.error?.code === 7004).length;
+                const rateLimit = results.filter(r => !r.success && r.error?.code === 6001).length;
+                const already = results.filter(r => !r.success && r.error?.code === 7003).length;
+
+                const summary = `总请求: ${count}\n抢购成功(排队): ${successCount}\n失败: ${failCount}\n其中：售罄 ${stockEmpty} / 限流 ${rateLimit} / 已购买 ${already}\n\n订单由异步线程落库，稍后可在订单列表查看`;
+                showResult('stressResult', summary + '\n\n详情:\n' + JSON.stringify(results, null, 2), false);
+                listSeckillGoods();
+                listOrders();
+            } catch (e) {
+                showResult('stressResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function generateSignTest() {
+            try {
+                const method = document.getElementById('signTestMethod').value;
+                const path = document.getElementById('signTestPath').value;
+                const params = JSON.parse(document.getElementById('signTestParams').value || '{}');
+                const bodyText = document.getElementById('signTestBody').value;
+                const res = await api.post('/sign/generate', {
+                    method,
+                    path,
+                    params,
+                    body: bodyText && bodyText !== '{}' ? bodyText : null
+                });
+                showResult('signTestResult', res.data, false);
+            } catch (e) {
+                showResult('signTestResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function sendSignTest() {
+            try {
+                const method = document.getElementById('signTestMethod').value;
+                const path = document.getElementById('signTestPath').value;
+                const params = JSON.parse(document.getElementById('signTestParams').value || '{}');
+                const bodyText = document.getElementById('signTestBody').value;
+                const body = bodyText && bodyText !== '{}' ? JSON.parse(bodyText) : null;
+
+                let url = path;
+                const query = new URLSearchParams(params).toString();
+                if (query) url += '?' + query;
+
+                const res = await signedFetch(method, url, body, null);
+                showResult('signTestResult', res.data, false);
+            } catch (e) {
+                showResult('signTestResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function sendBadSignTest() {
+            try {
+                const method = document.getElementById('signTestMethod').value;
+                const path = document.getElementById('signTestPath').value;
+                const params = JSON.parse(document.getElementById('signTestParams').value || '{}');
+                const bodyText = document.getElementById('signTestBody').value;
+                const body = bodyText && bodyText !== '{}' ? JSON.parse(bodyText) : null;
+
+                let url = path;
+                const query = new URLSearchParams(params).toString();
+                if (query) url += '?' + query;
+
+                const res = await api.post('/sign/generate', {
+                    method,
+                    path,
+                    params,
+                    body: bodyText && bodyText !== '{}' ? bodyText : null
+                });
+                const signInfo = res.data.data;
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                    'X-Timestamp': signInfo.timestamp,
+                    'X-Nonce': signInfo.nonce,
+                    'X-Sign': 'bad-sign'
+                };
+                const options = { method, headers };
+                if (body) options.body = JSON.stringify(body);
+
+                const fetchRes = await fetch(url, options);
+                const data = await fetchRes.json();
+                showResult('signTestResult', data, true);
+            } catch (e) {
+                showResult('signTestResult', e.response?.data || e.message, true);
+            }
+        }
+
+        async function sendPayCallback() {
+            await doSendPayCallback(false);
+        }
+
+        async function sendDuplicatePayCallback() {
+            await doSendPayCallback(true);
+        }
+
+        async function doSendPayCallback(duplicate) {
+            try {
+                const orderNo = document.getElementById('payOrderNo').value;
+                const payAmount = document.getElementById('payAmount').value;
+                const tradeNo = duplicate
+                        ? document.getElementById('payTradeNo').value + '-dup'
+                        : document.getElementById('payTradeNo').value;
+                const result = document.getElementById('payResult').value;
+
+                if (!orderNo || !payAmount || !tradeNo) {
+                    showResult('payCallbackResult', '请填写订单号、支付金额、流水号', true);
+                    return;
+                }
+
+                const res = await api.post('/payments/callback', {
+                    orderNo,
+                    payAmount: Number(payAmount),
+                    tradeNo,
+                    result
+                });
+                showResult('payCallbackResult', res.data, false);
+                listOrders();
+            } catch (e) {
+                showResult('payCallbackResult', e.response?.data || e.message, true);
+            }
+        }
+    </script>
+</body>
+</html>

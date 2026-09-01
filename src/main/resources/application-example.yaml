@@ -1,0 +1,8 @@
+# Copy this file to application-local.yaml before running the project locally.
+# Do not commit application-local.yaml or real credentials.
+spring:
+  datasource:
+    password: ${MALLU_DB_PASSWORD}
+
+jwt:
+  secret: ${MALLU_JWT_SECRET}

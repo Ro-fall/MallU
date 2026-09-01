@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mallu.user.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.mallu.user.entity.User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, username, password, phone, email, status, created_at, updated_at, create_by, update_by
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (username, password, phone, email, status, created_at, updated_at, create_by, update_by)
+        VALUES (#{username}, #{password}, #{phone}, #{email}, #{status}, #{createdAt}, #{updatedAt}, #{createBy}, #{updateBy})
+    </insert>
+
+    <select id="selectByUsername" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user
+        WHERE username = #{username}
+        LIMIT 1
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <update id="updateById">
+        UPDATE user
+        <set>
+            <if test="password != null">password = #{password},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="status != null">status = #{status},</if>
+            updated_at = #{updatedAt},
+            update_by = #{updateBy}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="countByUsername" resultType="int">
+        SELECT COUNT(*)
+        FROM user
+        WHERE username = #{username}
+    </select>
+
+</mapper>

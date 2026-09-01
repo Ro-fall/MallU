@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mallu.seckill.mapper.SeckillGoodsMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.mallu.seckill.entity.SeckillGoods">
+        <id column="id" property="id"/>
+        <result column="activity_id" property="activityId"/>
+        <result column="product_id" property="productId"/>
+        <result column="seckill_price" property="seckillPrice"/>
+        <result column="stock" property="stock"/>
+        <result column="total_stock" property="totalStock"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+    </resultMap>
+
+    <resultMap id="VOMap" type="com.example.mallu.seckill.dto.SeckillGoodsVO">
+        <id column="id" property="id"/>
+        <result column="activity_id" property="activityId"/>
+        <result column="activity_name" property="activityName"/>
+        <result column="product_id" property="productId"/>
+        <result column="product_name" property="productName"/>
+        <result column="product_image" property="productImage"/>
+        <result column="original_price" property="originalPrice"/>
+        <result column="seckill_price" property="seckillPrice"/>
+        <result column="stock" property="stock"/>
+        <result column="total_stock" property="totalStock"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, activity_id, product_id, seckill_price, stock, total_stock, created_at, updated_at, create_by, update_by
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM seckill_goods
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <select id="selectByActivityId" resultMap="VOMap">
+        SELECT
+            g.id,
+            g.activity_id,
+            a.name AS activity_name,
+            g.product_id,
+            p.name AS product_name,
+            p.main_image AS product_image,
+            p.price AS original_price,
+            g.seckill_price,
+            g.stock,
+            g.total_stock,
+            a.start_time,
+            a.end_time
+        FROM seckill_goods g
+                 JOIN seckill_activity a ON g.activity_id = a.id
+                 JOIN product p ON g.product_id = p.id
+        WHERE g.activity_id = #{activityId}
+          AND a.status = 1
+          AND a.start_time &lt;= NOW()
+          AND a.end_time &gt;= NOW()
+          AND p.status = 1
+        ORDER BY g.id DESC
+    </select>
+
+    <update id="decreaseStock">
+        UPDATE seckill_goods
+        SET stock = stock - #{quantity}
+        WHERE id = #{id} AND stock &gt;= #{quantity}
+    </update>
+
+    <update id="increaseStock">
+        UPDATE seckill_goods
+        SET stock = stock + #{quantity}
+        WHERE id = #{id}
+    </update>
+</mapper>

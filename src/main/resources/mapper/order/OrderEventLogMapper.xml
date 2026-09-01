@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mallu.order.mapper.OrderEventLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.mallu.order.entity.OrderEventLog">
+        <id column="id" property="id"/>
+        <result column="order_id" property="orderId"/>
+        <result column="event_type" property="eventType"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, order_id, event_type, content, status, created_at, updated_at, create_by, update_by
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_event_log (order_id, event_type, content, status, created_at, updated_at, create_by, update_by)
+        VALUES (#{orderId}, #{eventType}, #{content}, #{status}, #{createdAt}, #{updatedAt}, #{createBy}, #{updateBy})
+    </insert>
+
+    <select id="selectByOrderId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM order_event_log
+        WHERE order_id = #{orderId}
+        ORDER BY id DESC
+    </select>
+</mapper>

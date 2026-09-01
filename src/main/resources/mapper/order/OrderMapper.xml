@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mallu.order.mapper.OrderMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.mallu.order.entity.Order">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="user_id" property="userId"/>
+        <result column="address_id" property="addressId"/>
+        <result column="coupon_id" property="couponId"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="discount_amount" property="discountAmount"/>
+        <result column="pay_amount" property="payAmount"/>
+        <result column="status" property="status"/>
+        <result column="pay_time" property="payTime"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, order_no, user_id, address_id, coupon_id, total_amount, discount_amount, pay_amount, status, pay_time, created_at, updated_at, create_by, update_by
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `order` (order_no, user_id, address_id, coupon_id, total_amount, discount_amount, pay_amount, status, pay_time, created_at, updated_at, create_by, update_by)
+        VALUES (#{orderNo}, #{userId}, #{addressId}, #{couponId}, #{totalAmount}, #{discountAmount}, #{payAmount}, #{status}, #{payTime}, #{createdAt}, #{updatedAt}, #{createBy}, #{updateBy})
+    </insert>
+
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `order`
+        WHERE order_no = #{orderNo} AND user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <select id="selectByOrderNoForSystem" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `order`
+        WHERE order_no = #{orderNo}
+        LIMIT 1
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `order`
+        WHERE id = #{id} AND user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `order`
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*)
+        FROM `order`
+        WHERE user_id = #{userId}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE `order`
+        SET status = #{status}, pay_time = #{payTime}, updated_at = #{updatedAt}, update_by = #{updateBy}
+        WHERE id = #{id} AND user_id = #{userId}
+    </update>
+
+    <select id="selectByIdForSystem" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `order`
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+</mapper>

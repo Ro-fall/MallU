@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "name": "正常注册",
+      "username": "apitest_user_01",
+      "password": "pass123456",
+      "phone": "13800000001",
+      "email": "apitest01@mallu.com",
+      "expectedCode": 200
+    },
+    {
+      "name": "密码过短-边界",
+      "username": "apitest_user_02",
+      "password": "12345",
+      "phone": null,
+      "email": null,
+      "expectedCode": 400
+    },
+    {
+      "name": "手机号格式错误-异常",
+      "username": "apitest_user_03",
+      "password": "pass123456",
+      "phone": "12345",
+      "email": null,
+      "expectedCode": 400
+    }
+  ]
+}

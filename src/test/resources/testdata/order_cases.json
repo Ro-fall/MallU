@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "name": "正常创建订单-无优惠券",
+      "useCoupon": false,
+      "expectedCode": 200
+    },
+    {
+      "name": "使用优惠券创建订单",
+      "useCoupon": true,
+      "expectedCode": 200
+    }
+  ]
+}

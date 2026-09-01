@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mallu.coupon.mapper.UserCouponMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.mallu.coupon.entity.UserCoupon">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="coupon_id" property="couponId"/>
+        <result column="status" property="status"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="used_time" property="usedTime"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+    </resultMap>
+
+    <resultMap id="UserCouponVOResultMap" type="com.example.mallu.coupon.dto.UserCouponVO">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="coupon_id" property="couponId"/>
+        <result column="status" property="status"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="used_time" property="usedTime"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="coupon_name" property="couponName"/>
+        <result column="coupon_type" property="couponType"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_coupon (user_id, coupon_id, status, created_at, updated_at, create_by, update_by)
+        VALUES (#{userId}, #{couponId}, #{status}, #{createdAt}, #{updatedAt}, #{createBy}, #{updateBy})
+    </insert>
+
+    <update id="updateUsed">
+        UPDATE user_coupon
+        SET status = 2, order_no = #{orderNo}, used_time = NOW()
+        WHERE id = #{id} AND status = 1
+    </update>
+
+    <select id="selectByUserIdAndCouponId" resultMap="BaseResultMap">
+        SELECT id, user_id, coupon_id, status, order_no, used_time, created_at, updated_at, create_by, update_by
+        FROM user_coupon
+        WHERE user_id = #{userId} AND coupon_id = #{couponId}
+        LIMIT 1
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT id, user_id, coupon_id, status, order_no, used_time, created_at, updated_at, create_by, update_by
+        FROM user_coupon
+        WHERE id = #{id} AND user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <select id="selectByUserId" resultMap="UserCouponVOResultMap">
+        SELECT uc.id, uc.user_id, uc.coupon_id, uc.status, uc.order_no, uc.used_time, uc.created_at,
+               c.name AS coupon_name, c.type AS coupon_type
+        FROM user_coupon uc
+        LEFT JOIN coupon c ON uc.coupon_id = c.id
+        WHERE uc.user_id = #{userId}
+        ORDER BY uc.created_at DESC
+    </select>
+
+    <select id="selectAvailableByUserId" resultMap="UserCouponVOResultMap">
+        SELECT uc.id, uc.user_id, uc.coupon_id, uc.status, uc.order_no, uc.used_time, uc.created_at,
+               c.name AS coupon_name, c.type AS coupon_type
+        FROM user_coupon uc
+        JOIN coupon c ON uc.coupon_id = c.id
+        WHERE uc.user_id = #{userId}
+          AND uc.status = 1
+          AND c.status = 1
+          AND c.start_time &lt;= NOW()
+          AND c.end_time &gt;= NOW()
+        ORDER BY uc.created_at DESC
+    </select>
+
+</mapper>

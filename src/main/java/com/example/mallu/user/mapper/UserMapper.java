@@ -1,0 +1,18 @@
+package com.example.mallu.user.mapper;
+
+import com.example.mallu.user.entity.User;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface UserMapper {
+
+    int insert(User user);
+
+    User selectByUsername(String username);
+
+    User selectById(Long id);
+
+    int updateById(User user);
+
+    int countByUsername(String username);
+}

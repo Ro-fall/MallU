@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: MallU
+  config:
+    import: optional:classpath:application-local.yaml
+  datasource:
+    url: ${MALLU_DB_URL:jdbc:mysql://localhost:3306/mallu?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${MALLU_DB_USERNAME:root}
+    password: ${MALLU_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: ${MALLU_REDIS_HOST:localhost}
+      port: ${MALLU_REDIS_PORT:6379}
+      database: ${MALLU_REDIS_DATABASE:0}
+  jackson:
+    default-property-inclusion: non_null
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+jwt:
+  secret: ${MALLU_JWT_SECRET}
+  expiration: 86400000
+
+seckill:
+  async: true

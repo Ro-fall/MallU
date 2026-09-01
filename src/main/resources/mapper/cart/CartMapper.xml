@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mallu.cart.mapper.CartMapper">
+
+    <resultMap id="CartVOResultMap" type="com.example.mallu.cart.dto.CartVO">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="quantity" property="quantity"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="product_name" property="productName"/>
+        <result column="main_image" property="productImage"/>
+        <result column="price" property="productPrice"/>
+        <result column="stock" property="stock"/>
+    </resultMap>
+
+    <resultMap id="CartResultMap" type="com.example.mallu.cart.entity.Cart">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="product_id" property="productId"/>
+        <result column="quantity" property="quantity"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO cart (user_id, product_id, quantity, created_at, updated_at, create_by, update_by)
+        VALUES (#{userId}, #{productId}, #{quantity}, #{createdAt}, #{updatedAt}, #{createBy}, #{updateBy})
+    </insert>
+
+    <update id="updateQuantity">
+        UPDATE cart
+        SET quantity = #{quantity}
+        WHERE id = #{id} AND user_id = #{userId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM cart
+        WHERE id = #{id} AND user_id = #{userId}
+    </delete>
+
+    <select id="selectByUserIdAndProductId" resultMap="CartResultMap">
+        SELECT id, user_id, product_id, quantity, created_at, updated_at, create_by, update_by
+        FROM cart
+        WHERE user_id = #{userId} AND product_id = #{productId}
+        LIMIT 1
+    </select>
+
+    <select id="selectById" resultMap="CartVOResultMap">
+        SELECT
+            c.id,
+            c.product_id,
+            c.quantity,
+            c.created_at,
+            p.name AS product_name,
+            p.main_image,
+            p.price,
+            p.stock
+        FROM cart c
+        JOIN product p ON c.product_id = p.id
+        WHERE c.id = #{id} AND c.user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <select id="selectByUserId" resultMap="CartVOResultMap">
+        SELECT
+            c.id,
+            c.product_id,
+            c.quantity,
+            c.created_at,
+            p.name AS product_name,
+            p.main_image,
+            p.price,
+            p.stock
+        FROM cart c
+        JOIN product p ON c.product_id = p.id
+        WHERE c.user_id = #{userId}
+        ORDER BY c.created_at DESC
+    </select>
+
+</mapper>
