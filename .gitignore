@@ -1,6 +1,7 @@
 HELP.md
 target/
 performance/results/
+web/vite-app.err
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

@@ -167,13 +167,20 @@ onMounted(async () => { loading.value = true; try { await loadProducts(); if (ha
 
     <main>
       <section v-if="activeView === 'home'" class="home">
-        <div class="hero"><p>为可靠交易而设计</p><h1>把每一次下单<br>都走得更稳。</h1><span>库存条件更新 · 支付回调幂等 · 秒杀异步落库</span></div>
+        <div class="hero">
+          <div class="hero-copy"><p>为可靠交易而设计</p><h1>把每一次下单<br>都走得更稳。</h1><span>库存条件更新 · 支付回调幂等 · 秒杀异步落库</span><button class="hero-action" @click="activeView = 'seckill'; loadActivities()">查看限时秒杀 <b>→</b></button></div>
+          <div class="hero-showcase" aria-label="MallU 交易能力概览">
+            <div class="showcase-top"><span>LIVE STORE</span><i>●</i></div>
+            <div class="showcase-title"><small>今日精选</small><strong>MallU<br>Selection</strong></div>
+            <div class="showcase-stats"><div><b>12</b><span>在售商品</span></div><div><b>24H</b><span>订单守护</span></div></div>
+          </div>
+        </div>
         <div class="section-title"><div><p class="eyebrow">商品精选</p><h2>今天想买点什么？</h2></div><span>{{ products.length }} 件在售商品</span></div>
         <div v-if="loading" class="empty">正在加载商品…</div>
         <div v-else class="product-grid">
-          <article v-for="product in products" :key="product.id" class="product-card">
-            <div class="product-visual"><span>{{ product.name?.slice(0, 1) }}</span></div>
-            <div class="product-info"><p>{{ product.name }}</p><small>{{ product.description || '品质好物，现货发售' }}</small><div><strong>¥{{ Number(product.price).toFixed(2) }}</strong><button @click="addCart(product)">加入购物车</button></div></div>
+          <article v-for="product in products" :key="product.id" :class="['product-card', `tone-${product.id % 4}`]">
+            <div class="product-visual"><span class="item-no">0{{ product.id }}</span><span class="product-mark">{{ product.name?.slice(0, 1) }}</span><small>精选现货</small></div>
+            <div class="product-info"><p>{{ product.name }}</p><small>{{ product.description || '品质好物，现货发售' }}</small><div><strong>¥{{ Number(product.price).toFixed(2) }}</strong><button @click="addCart(product)">加入购物车 <b>+</b></button></div></div>
           </article>
         </div>
       </section>
