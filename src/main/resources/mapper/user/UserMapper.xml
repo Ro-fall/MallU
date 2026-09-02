@@ -59,4 +59,10 @@
         WHERE username = #{username}
     </select>
 
+    <delete id="deleteTestUserById">
+        DELETE FROM user
+        WHERE id = #{id}
+          AND username = #{username}
+          AND LEFT(username, 3) = 'tc_'
+    </delete>
 </mapper>

@@ -15,4 +15,7 @@ public interface UserMapper {
     int updateById(User user);
 
     int countByUsername(String username);
+
+    int deleteTestUserById(@org.apache.ibatis.annotations.Param("id") Long id,
+                           @org.apache.ibatis.annotations.Param("username") String username);
 }
