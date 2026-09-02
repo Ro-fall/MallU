@@ -1,37 +1,33 @@
 (() => {
-  let testSession = JSON.parse(localStorage.getItem('testConsoleSession') || 'null');
+  let session = JSON.parse(localStorage.getItem('testConsoleSession') || 'null');
   const host = document.querySelector('.container');
   if (!host) return;
-  const panel = document.createElement('section');
-  panel.className = 'automation-panel';
-  panel.innerHTML = `
-    <div class="automation-copy"><p class="eyebrow">自动化工作区</p><h2>一键准备测试数据</h2><p>自动创建带 <code>tc_</code> 前缀的账号和默认收货地址，并填入当前页面。清理只会删除本控制台创建的测试账号及其级联数据。</p></div>
-    <div class="automation-actions"><button id="prepareTestSession">准备测试会话</button><button id="cleanupTestSession" class="danger">清理测试数据</button></div>
-    <pre id="automationResult" class="automation-result">尚未准备测试会话</pre>`;
-  host.prepend(panel);
-  const result = panel.querySelector('#automationResult');
-  const show = (data, error = false) => { result.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2); result.classList.toggle('error', error); };
-  const field = (id, value) => { const el = document.getElementById(id); if (el && value != null) el.value = value; };
-  const fillSession = async (session) => {
-    token = session.token; localStorage.setItem('token', token); localStorage.setItem('testConsoleSession', JSON.stringify(session));
-    document.getElementById('currentToken').textContent = token;
-    field('regUsername', session.username); field('regPassword', session.password); field('regPhone', session.phone); field('regEmail', session.email);
-    field('loginUsername', session.username); field('loginPassword', session.password);
-    ['addrPhone'].forEach(id => field(id, session.phone)); field('addrName', '自动化测试用户'); field('addrProvince', '上海市'); field('addrCity', '上海市'); field('addrDistrict', '浦东新区'); field('addrDetail', '测试大道 100 号');
-    ['orderAddressId', 'seckillAddressId', 'stressAddressId'].forEach(id => field(id, session.addressId));
-    try {
-      const products = (await api.get('/products')).data.data || []; const product = products.list ? products.list[0] : products[0];
-      if (product) field('cartProductId', product.id);
-      const activities = (await api.get('/seckill/activities')).data.data || []; const activity = activities[0];
-      if (activity) { field('seckillActivityId', activity.id); const goods = (await api.get('/seckill/activities/' + activity.id + '/goods')).data.data || []; const first = goods[0]; if (first) ['seckillGoodsId', 'stressSeckillGoodsId'].forEach(id => field(id, first.id)); }
-    } catch (error) { console.warn('预置商品或秒杀数据失败', error); }
-  };
-  document.getElementById('prepareTestSession').addEventListener('click', async () => {
-    try { show('正在创建测试账号、地址并预置表单…'); const res = await fetch('/api/test-support/sessions', {method:'POST'}); const body = await res.json(); if (!res.ok || body.code !== 200) throw new Error(body.message || '创建失败'); testSession = body.data; await fillSession(testSession); show({message:'测试会话已准备完成，表单中的账号、地址和可用商品已自动填入。', session:{username:testSession.username, password:testSession.password, addressId:testSession.addressId}}); } catch (error) { show(error.message || '创建测试会话失败', true); }
-  });
-  document.getElementById('cleanupTestSession').addEventListener('click', async () => {
-    if (!testSession) { show('没有可清理的控制台测试会话。', true); return; }
-    try { show('正在删除本控制台创建的测试数据…'); const url = '/api/test-support/sessions/' + encodeURIComponent(testSession.userId) + '?username=' + encodeURIComponent(testSession.username); const res = await fetch(url, {method:'DELETE'}); const body = await res.json(); if (!res.ok || body.code !== 200) throw new Error(body.message || '清理失败'); localStorage.removeItem('testConsoleSession'); localStorage.removeItem('token'); token = ''; document.getElementById('currentToken').textContent = '未登录'; testSession = null; show('测试账号及其关联的地址、购物车、订单和支付记录已清理。'); } catch (error) { show(error.message || '清理测试数据失败', true); }
-  });
-  if (testSession) { fillSession(testSession).then(() => show('已恢复本浏览器保存的测试会话。')); }
+  const dashboard = document.createElement('section');
+  dashboard.className = 'suite-dashboard';
+  dashboard.innerHTML = `
+    <div class="suite-intro"><div><p class="eyebrow">AUTOMATED REGRESSION</p><h2>用例驱动，不填表单</h2><p>平台按预置流程创建隔离账号、选择可用商品、执行请求和断言，并生成结果报告。每次一键回归结束后会自动清理测试数据。</p></div><div class="suite-state" id="suiteState">尚未准备会话</div></div>
+    <div class="suite-actions"><button id="runAllSuites">运行一键回归</button><button id="prepareReusableSession">准备可复用会话</button><button id="cleanupReusableSession" class="danger">清理当前会话</button></div>
+    <div class="suite-cards"><article><span>01</span><h3>认证与会话</h3><p>生成账号，校验登录态与当前用户。</p><button data-suite="auth">运行此用例</button></article><article><span>02</span><h3>交易主链路</h3><p>选择商品、加入购物车、签名创建订单。</p><button data-suite="trade">运行此用例</button></article><article><span>03</span><h3>安全校验</h3><p>验证幂等令牌及错误签名拦截。</p><button data-suite="security">运行此用例</button></article></div>
+    <div class="suite-report"><div><strong>运行报告</strong><small id="suiteSummary">请选择一个预置用例，或运行完整回归。</small></div><ol id="suiteSteps"></ol></div>`;
+  host.prepend(dashboard);
+  const state = dashboard.querySelector('#suiteState'); const summary = dashboard.querySelector('#suiteSummary'); const steps = dashboard.querySelector('#suiteSteps');
+  const setState = (text, tone = '') => { state.textContent = text; state.className = 'suite-state ' + tone; };
+  const report = (name, status, detail) => { const row = document.createElement('li'); row.className = status; row.innerHTML = `<b>${status === 'pass' ? '通过' : status === 'running' ? '执行中' : '失败'}</b><span>${name}</span><small>${detail || ''}</small>`; steps.appendChild(row); return row; };
+  const updateManualFields = (data) => { const put = (id, value) => { const el = document.getElementById(id); if (el && value != null) el.value = value; }; token = data.token; localStorage.setItem('token', token); document.getElementById('currentToken').textContent = token; ['orderAddressId','seckillAddressId','stressAddressId'].forEach(id => put(id, data.addressId)); };
+  const createSession = async () => { if (session) return session; const response = await fetch('/api/test-support/sessions', {method: 'POST'}); const body = await response.json(); if (!response.ok || body.code !== 200) throw new Error(body.message || '测试会话创建失败'); session = body.data; localStorage.setItem('testConsoleSession', JSON.stringify(session)); updateManualFields(session); setState('会话已就绪：' + session.username, 'ready'); return session; };
+  const cleanup = async () => { if (!session) { setState('没有待清理的测试会话'); return; } const url = '/api/test-support/sessions/' + encodeURIComponent(session.userId) + '?username=' + encodeURIComponent(session.username); const response = await fetch(url, {method: 'DELETE'}); const body = await response.json(); if (!response.ok || body.code !== 200) throw new Error(body.message || '测试数据清理失败'); localStorage.removeItem('testConsoleSession'); localStorage.removeItem('token'); token = ''; session = null; document.getElementById('currentToken').textContent = '未登录'; setState('测试数据已清理'); };
+  const requireSession = async () => { const active = await createSession(); if (!token) updateManualFields(active); return active; };
+  const runAuth = async () => { await requireSession(); const response = await api.get('/users/me'); if (response.data.code !== 200 || !response.data.data) throw new Error('当前用户接口未返回有效数据'); return '账号和登录态均有效'; };
+  const runTrade = async () => { const active = await requireSession(); const productsResponse = await api.get('/products'); const page = productsResponse.data.data || {}; const product = (page.list || page)[0]; if (!product) throw new Error('没有可用商品'); await api.post('/carts', {productId: product.id, quantity: 1}); const idem = await getIdempotentToken(); const order = await signedFetch('POST', '/api/orders', {addressId: active.addressId}, idem); if (order.data.code !== 200 || !order.data.data) throw new Error('创建订单未返回订单数据'); return '商品 ' + product.id + ' 已完成购物车与签名下单'; };
+  const runSecurity = async () => { await requireSession(); const idem = await getIdempotentToken(); if (!idem) throw new Error('未获取到幂等令牌'); const sign = await api.post('/sign/generate', {method:'POST', path:'/api/orders', params:{}, body:'{}'}); const info = sign.data.data; const response = await fetch('/api/orders', {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer ' + token,'X-Timestamp':info.timestamp,'X-Nonce':info.nonce,'X-Sign':'invalid-sign'}}); const body = await response.json(); if (body.code === 200) throw new Error('错误签名没有被拦截'); if (body.code !== 401) throw new Error('签名校验返回异常：' + (body.message || body.code)); return '幂等令牌可用，错误签名已被拦截'; };
+  const suites = {auth:['认证与会话',runAuth], trade:['交易主链路',runTrade], security:['安全校验',runSecurity]};
+  const runSuite = async (key) => { const [label, handler] = suites[key]; const row = report(label, 'running', '正在调用接口…'); try { const detail = await handler(); row.className = 'pass'; row.querySelector('b').textContent = '通过'; row.querySelector('small').textContent = detail; summary.textContent = label + ' 已通过。'; } catch (error) { row.className = 'fail'; row.querySelector('b').textContent = '失败'; row.querySelector('small').textContent = error.response?.data?.message || error.message; summary.textContent = label + ' 需要检查。'; throw error; } };
+  dashboard.querySelectorAll('[data-suite]').forEach(button => button.addEventListener('click', () => runSuite(button.dataset.suite).catch(() => {})));
+  dashboard.querySelector('#prepareReusableSession').addEventListener('click', async () => { try { await createSession(); summary.textContent = '可复用测试会话已准备好；运行任一用例无需填表。'; } catch (error) { summary.textContent = error.message; setState('准备失败', 'failed'); } });
+  dashboard.querySelector('#cleanupReusableSession').addEventListener('click', async () => { try { await cleanup(); summary.textContent = '本控制台生成的数据已清理。'; } catch (error) { summary.textContent = error.message; setState('清理失败', 'failed'); } });
+  dashboard.querySelector('#runAllSuites').addEventListener('click', async () => { steps.innerHTML = ''; setState('完整回归执行中…'); try { await createSession(); for (const key of ['auth','trade','security']) await runSuite(key); summary.textContent = '完整回归全部通过，正在回收测试数据。'; await cleanup(); summary.textContent = '完整回归全部通过，测试数据已自动清理。'; } catch (error) { setState('回归失败', 'failed'); summary.textContent = '失败后可点击“清理当前会话”回收数据。'; } });
+  const manual = document.createElement('details'); manual.id = 'manual-tools'; manual.innerHTML = '<summary>高级手工调试（仅在需要定位单个接口时展开）</summary>';
+  [...host.querySelectorAll(':scope > .section')].forEach(section => manual.appendChild(section)); host.appendChild(manual);
+  const legacy = host.querySelector('.scenario-bar, .quick-nav'); if (legacy) legacy.remove();
+  if (session) { updateManualFields(session); setState('已恢复会话：' + session.username, 'ready'); }
 })();
