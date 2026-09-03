@@ -16,6 +16,19 @@ spring:
       host: ${MALLU_REDIS_HOST:localhost}
       port: ${MALLU_REDIS_PORT:6379}
       database: ${MALLU_REDIS_DATABASE:0}
+  rabbitmq:
+    host: ${MALLU_RABBITMQ_HOST:localhost}
+    port: ${MALLU_RABBITMQ_PORT:5672}
+    username: ${MALLU_RABBITMQ_USERNAME:guest}
+    password: ${MALLU_RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 10
   jackson:
     default-property-inclusion: non_null
 

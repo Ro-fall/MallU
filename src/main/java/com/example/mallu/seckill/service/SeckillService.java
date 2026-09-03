@@ -17,6 +17,7 @@ import com.example.mallu.seckill.entity.SeckillActivity;
 import com.example.mallu.seckill.entity.SeckillGoods;
 import com.example.mallu.seckill.entity.SeckillOrder;
 import com.example.mallu.seckill.mapper.SeckillActivityMapper;
+import com.example.mallu.seckill.mq.SeckillOrderMessageProducer;
 import com.example.mallu.seckill.mapper.SeckillGoodsMapper;
 import com.example.mallu.seckill.mapper.SeckillOrderMapper;
 import com.example.mallu.user.entity.Address;
@@ -45,6 +46,7 @@ public class SeckillService {
     private final SeckillRedisService seckillRedisService;
     private final RedisAvailabilityService redisAvailabilityService;
     private final SeckillAsyncService seckillAsyncService;
+    private final SeckillOrderMessageProducer seckillOrderMessageProducer;
 
     /**
      * 秒杀落库开关：true=异步落库（默认），false=同步落库（压测基线对比用）
@@ -132,7 +134,13 @@ public class SeckillService {
         if (asyncEnabled) {
             // 异步模式：标记排队中，异步落库建订单，立即返回
             seckillRedisService.markResultProcessing(seckillGoodsId, userId);
-            seckillAsyncService.createOrderAsync(seckillGoodsId, userId, address.getId());
+            try {
+                seckillOrderMessageProducer.publish(seckillGoodsId, userId, address.getId());
+            } catch (RuntimeException e) {
+                seckillRedisService.recoverStock(seckillGoodsId, userId);
+                seckillRedisService.markResultFailed(seckillGoodsId, userId);
+                throw e;
+            }
 
             SeckillOrderVO vo = new SeckillOrderVO();
             vo.setSeckillGoodsId(seckillGoodsId);
