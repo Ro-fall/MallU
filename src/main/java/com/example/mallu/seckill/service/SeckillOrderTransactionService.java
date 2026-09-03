@@ -14,6 +14,7 @@ import com.example.mallu.seckill.entity.SeckillOrder;
 import com.example.mallu.seckill.mapper.SeckillGoodsMapper;
 import com.example.mallu.seckill.mapper.SeckillOrderMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.List;
  * 异步线程通过另一个 Spring Bean 调用该方法，确保 @Transactional 能被代理拦截。
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class SeckillOrderTransactionService {
     private final SeckillGoodsMapper goodsMapper;
@@ -76,7 +78,12 @@ public class SeckillOrderTransactionService {
         seckillOrder.setUserId(userId);
         seckillOrder.setStatus(1);
         seckillOrderMapper.insert(seckillOrder);
-        seckillRedisService.markResultSuccess(seckillGoodsId, userId, seckillOrder.getId());
+        try {
+            seckillRedisService.markResultSuccess(seckillGoodsId, userId, seckillOrder.getId());
+        } catch (RuntimeException e) {
+            // 订单账本已经成功提交；结果缓存缺失时查询接口会回退到 MySQL。
+            log.warn("秒杀结果写入 Redis 失败，将由 MySQL 查询兜底", e);
+        }
         return seckillOrder;
     }
 }

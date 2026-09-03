@@ -30,9 +30,9 @@ public class IdempotentTokenService {
 
     public boolean consumeToken(Long userId, String token) {
         String key = IDEMPOTENT_KEY_PREFIX + userId + ":" + token;
-        Boolean exists = redisTemplate.hasKey(key);
+        // Redis DEL 是原子命令；并发请求中只有一个能成功删除同一个 key。
         Boolean deleted = redisTemplate.delete(key);
-        log.info("消费幂等 Token: {}, exists={}, deleted={}", key, exists, deleted);
+        log.info("消费幂等 Token: {}, deleted={}", key, deleted);
         return Boolean.TRUE.equals(deleted);
     }
 }

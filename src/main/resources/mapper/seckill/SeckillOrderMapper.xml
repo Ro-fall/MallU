@@ -68,4 +68,9 @@
         ORDER BY id ASC
     </select>
 
+    <select id="selectActiveUserIdsByGoodsId" resultType="long">
+        SELECT user_id
+        FROM seckill_order
+        WHERE seckill_goods_id = #{seckillGoodsId}
+    </select>
 </mapper>

@@ -1,6 +1,7 @@
 package com.example.mallu.seckill.service;
 
 import com.example.mallu.common.exception.BusinessException;
+import com.example.mallu.common.health.RedisAvailabilityService;
 import com.example.mallu.common.interceptor.UserContext;
 import com.example.mallu.common.redis.SeckillRedisService;
 import com.example.mallu.common.result.ResultCode;
@@ -42,6 +43,7 @@ public class SeckillService {
     private final ProductMapper productMapper;
     private final AddressMapper addressMapper;
     private final SeckillRedisService seckillRedisService;
+    private final RedisAvailabilityService redisAvailabilityService;
     private final SeckillAsyncService seckillAsyncService;
 
     /**
@@ -80,6 +82,7 @@ public class SeckillService {
 
     @Transactional
     public SeckillOrderVO seckill(Long seckillGoodsId, Long addressId) {
+        redisAvailabilityService.requireAvailable("秒杀服务");
         Long userId = UserContext.getUserId();
         LocalDateTime now = LocalDateTime.now();
 
@@ -190,8 +193,13 @@ public class SeckillService {
         vo.setSeckillGoodsId(seckillGoodsId);
         vo.setUserId(userId);
         if (result == null) {
-            vo.setStatus(0);
-            return vo;
+            // Redis 查询不可用或结果 key 过期时，回退到 MySQL 已落库记录。
+            SeckillOrder fallback = seckillOrderMapper.selectByUserIdAndGoodsId(userId, seckillGoodsId);
+            if (fallback == null) {
+                vo.setStatus(0);
+                return vo;
+            }
+            result = fallback.getId();
         }
         if (result == -1) {
             vo.setStatus(-1);

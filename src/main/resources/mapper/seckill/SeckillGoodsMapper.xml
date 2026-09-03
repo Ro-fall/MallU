@@ -78,4 +78,13 @@
         SET stock = stock + #{quantity}
         WHERE id = #{id}
     </update>
+    <select id="selectActiveForRecovery" resultMap="BaseResultMap">
+        SELECT g.id, g.activity_id, g.product_id, g.seckill_price, g.stock, g.total_stock,
+               g.created_at, g.updated_at, g.create_by, g.update_by
+        FROM seckill_goods g
+        JOIN seckill_activity a ON a.id = g.activity_id
+        WHERE a.status = 1
+          AND a.start_time &lt;= NOW()
+          AND a.end_time &gt;= NOW()
+    </select>
 </mapper>

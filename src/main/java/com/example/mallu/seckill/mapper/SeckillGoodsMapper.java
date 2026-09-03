@@ -14,6 +14,8 @@ public interface SeckillGoodsMapper {
 
     List<SeckillGoodsVO> selectByActivityId(@Param("activityId") Long activityId);
 
+    List<SeckillGoods> selectActiveForRecovery();
+
     int decreaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
 
     int increaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);

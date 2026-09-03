@@ -3,6 +3,7 @@ package com.example.mallu.common.exception;
 import com.example.mallu.common.result.Result;
 import com.example.mallu.common.result.ResultCode;
 import jakarta.validation.ConstraintViolation;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindException;
@@ -49,6 +50,11 @@ public class GlobalExceptionHandler {
         return Result.error(ResultCode.PARAM_ERROR.getCode(), message);
     }
 
+    @ExceptionHandler(RedisConnectionFailureException.class)
+    public Result<Void> handleRedisConnectionFailure(RedisConnectionFailureException e) {
+        log.warn("Redis 连接异常: {}", e.getMostSpecificCause().getMessage());
+        return Result.error(ResultCode.REDIS_UNAVAILABLE.getCode(), ResultCode.REDIS_UNAVAILABLE.getMessage());
+    }
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e) {
         log.error("系统异常", e);

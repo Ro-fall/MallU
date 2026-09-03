@@ -25,4 +25,6 @@ public interface SeckillOrderMapper {
     int deleteByOrderId(@Param("orderId") Long orderId);
 
     List<SeckillOrder> selectTimeoutOrders(@Param("timeoutMinutes") Integer timeoutMinutes);
+
+    List<Long> selectActiveUserIdsByGoodsId(@Param("seckillGoodsId") Long seckillGoodsId);
 }

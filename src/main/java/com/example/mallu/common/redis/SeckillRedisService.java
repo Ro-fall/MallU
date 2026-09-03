@@ -1,6 +1,7 @@
 package com.example.mallu.common.redis;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
@@ -52,9 +53,14 @@ public class SeckillRedisService {
     }
 
     public Integer getRemainingStock(Long seckillGoodsId) {
-        String key = STOCK_KEY_PREFIX + seckillGoodsId;
-        String value = stringRedisTemplate.opsForValue().get(key);
-        return value == null ? null : Integer.parseInt(value);
+        try {
+            String key = STOCK_KEY_PREFIX + seckillGoodsId;
+            String value = stringRedisTemplate.opsForValue().get(key);
+            return value == null ? null : Integer.parseInt(value);
+        } catch (RuntimeException e) {
+            // 秒杀展示、详情查询可以退回到 MySQL；下单入口会先执行 Redis 可用性检查。
+            return null;
+        }
     }
 
     public void recoverStock(Long seckillGoodsId, Long userId) {
@@ -88,11 +94,20 @@ public class SeckillRedisService {
      * 查询异步秒杀结果：null 表示还未开始处理；0 表示处理中；-1 表示失败；大于 0 为 seckillOrderId
      */
     public Long getResult(Long seckillGoodsId, Long userId) {
-        String key = RESULT_KEY_PREFIX + seckillGoodsId + ":" + userId;
-        String value = stringRedisTemplate.opsForValue().get(key);
-        if (value == null) {
+        try {
+            String key = RESULT_KEY_PREFIX + seckillGoodsId + ":" + userId;
+            String value = stringRedisTemplate.opsForValue().get(key);
+            return value == null ? null : Long.parseLong(value);
+        } catch (RuntimeException e) {
             return null;
         }
-        return Long.parseLong(value);
+    }
+    public void rebuildStock(Long seckillGoodsId, Integer stock, List<Long> purchasedUserIds) {
+        clearStock(seckillGoodsId);
+        preloadStock(seckillGoodsId, stock);
+        if (!purchasedUserIds.isEmpty()) {
+            stringRedisTemplate.opsForSet().add(USER_KEY_PREFIX + seckillGoodsId,
+                    purchasedUserIds.stream().map(String::valueOf).toArray(String[]::new));
+        }
     }
 }

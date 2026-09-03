@@ -36,6 +36,7 @@ public enum ResultCode {
     USER_COUPON_NOT_AVAILABLE(5004, "用户优惠券不可用或已使用"),
 
     RATE_LIMIT(6001, "请求过于频繁，请稍后重试"),
+    REDIS_UNAVAILABLE(8001, "关键服务暂不可用，请稍后重试"),
 
     SECKILL_ACTIVITY_NOT_FOUND(7001, "秒杀活动不存在或已结束"),
     SECKILL_GOODS_NOT_FOUND(7002, "秒杀商品不存在"),
