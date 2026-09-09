@@ -11,6 +11,7 @@ const coupons = ref([])
 const couponCenter = ref([])
 const activities = ref([])
 const seckillGoods = ref([])
+const searchKeyword = ref('')
 const selectedCouponId = ref('')
 const selectedAddressId = ref('')
 const loading = ref(false)
@@ -26,6 +27,11 @@ const addressForm = ref({ receiverName: '', phone: '', province: '浙江省', ci
 const cartCount = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0))
 const cartTotal = computed(() => cart.value.reduce((sum, item) => sum + Number(item.totalPrice || item.productPrice * item.quantity), 0))
 const hasLogin = computed(() => Boolean(token.value))
+const filteredProducts = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase()
+  if (!keyword) return products.value
+  return products.value.filter((product) => `${product.name || ''} ${product.description || ''}`.toLowerCase().includes(keyword))
+})
 
 function show(message, type = 'success') {
   notice.value = message
@@ -149,36 +155,31 @@ onMounted(async () => { loading.value = true; try { await loadProducts(); if (ha
 
 <template>
   <div class="app-shell">
+    <div class="site-strip"><div><span v-if="!user">亲，请登录</span><button v-if="!user" @click="authOpen = true">免费注册</button><span v-else>你好，{{ user.username }}</span><button v-if="user" @click="logout">退出</button></div><div><button @click="activeView = 'orders'; loadOrders()">我的订单</button><button @click="activeView = 'cart'">购物车 <b v-if="cartCount">{{ cartCount }}</b></button></div></div>
     <header class="topbar">
-      <button class="brand" @click="activeView = 'home'"><span>MU</span>MallU</button>
-      <nav>
-        <button :class="{ active: activeView === 'home' }" @click="activeView = 'home'">商品</button>
-        <button :class="{ active: activeView === 'coupons' }" @click="activeView = 'coupons'; loadCouponCenter()">优惠券</button>
-        <button :class="{ active: activeView === 'cart' }" @click="activeView = 'cart'">购物车 <em v-if="cartCount">{{ cartCount }}</em></button>
-        <button :class="{ active: activeView === 'orders' }" @click="activeView = 'orders'; loadOrders()">订单</button>
-        <button :class="{ active: activeView === 'seckill' }" @click="activeView = 'seckill'; loadActivities()">限时秒杀</button>
-      </nav>
-      <div class="account">
-        <span v-if="user">你好，{{ user.username }}</span>
-        <button v-if="user" class="text-button" @click="logout">退出</button>
-        <button v-else class="primary small" @click="authOpen = true">登录 / 注册</button>
-      </div>
+      <button class="brand" @click="activeView = 'home'"><strong>mallu</strong><small>轻松购物</small></button>
+      <label class="search-box"><input v-model="searchKeyword" @keyup.enter="activeView = 'home'" placeholder="搜索商品，发现好物"><button @click="activeView = 'home'">搜索</button></label>
+      <button class="cart-entry" @click="activeView = 'cart'"><span>🛒</span>购物车 <b>{{ cartCount }}</b></button>
     </header>
-
+    <nav class="channel-nav">
+      <button :class="{ active: activeView === 'home' }" @click="activeView = 'home'">首页</button>
+      <button @click="activeView = 'home'; searchKeyword = ''">全部商品</button>
+      <button :class="{ active: activeView === 'seckill' }" @click="activeView = 'seckill'; loadActivities()">限时秒杀</button>
+      <button :class="{ active: activeView === 'coupons' }" @click="activeView = 'coupons'; loadCouponCenter()">领券中心</button>
+      <button :class="{ active: activeView === 'orders' }" @click="activeView = 'orders'; loadOrders()">订单中心</button>
+    </nav>
     <main>
       <section v-if="activeView === 'home'" class="home">
-        <div class="hero">
-          <div class="hero-copy"><p>为可靠交易而设计</p><h1>把每一次下单<br>都走得更稳。</h1><span>库存条件更新 · 支付回调幂等 · 秒杀异步落库</span><button class="hero-action" @click="activeView = 'seckill'; loadActivities()">查看限时秒杀 <b>→</b></button></div>
-          <div class="hero-showcase" aria-label="MallU 交易能力概览">
-            <div class="showcase-top"><span>LIVE STORE</span><i>●</i></div>
-            <div class="showcase-title"><small>今日精选</small><strong>MallU<br>Selection</strong></div>
-            <div class="showcase-stats"><div><b>12</b><span>在售商品</span></div><div><b>24H</b><span>订单守护</span></div></div>
-          </div>
+        <div class="home-top">
+          <aside class="category-menu"><b>服务分类</b><button @click="searchKeyword = ''; activeView = 'home'">品质好物 <i>›</i></button><button @click="activeView = 'seckill'; loadActivities()">限时抢购 <i>›</i></button><button @click="activeView = 'coupons'; loadCouponCenter()">优惠福利 <i>›</i></button><button @click="activeView = 'orders'; loadOrders()">订单服务 <i>›</i></button></aside>
+          <div class="hero"><div class="hero-copy"><p>限时好价 · 正在热卖</p><h1>上 MallU<br><em>买点好东西</em></h1><span>每一笔订单，都有可靠交易链路守护</span><button class="hero-action" @click="activeView = 'seckill'; loadActivities()">立即抢购 <b>→</b></button></div><div class="hero-showcase" aria-label="MallU 热卖活动"><small>每日好价</small><strong>HOT<br>SALE</strong><span>精选商品<br>低至 5 折</span></div></div>
+          <aside class="benefit-card"><b>MallU 易购</b><span>你好，{{ user?.username || '欢迎来到 MallU' }}</span><button class="primary small" @click="user ? activeView = 'orders' : authOpen = true">{{ user ? '查看订单' : '立即登录' }}</button><div><button @click="activeView = 'coupons'; loadCouponCenter()">领券中心</button><button @click="activeView = 'cart'">购物车</button></div></aside>
         </div>
-        <div class="section-title"><div><p class="eyebrow">商品精选</p><h2>今天想买点什么？</h2></div><span>{{ products.length }} 件在售商品</span></div>
+        <div class="quick-links"><button @click="activeView = 'seckill'; loadActivities()"><b>秒杀</b><span>限时低价</span></button><button @click="activeView = 'coupons'; loadCouponCenter()"><b>优惠券</b><span>好券可领</span></button><button @click="activeView = 'cart'"><b>购物车</b><span>随时结算</span></button><button @click="activeView = 'orders'; loadOrders()"><b>订单</b><span>物流追踪</span></button></div>
+        <div class="section-title"><div><p class="eyebrow">猜你喜欢</p><h2>{{ searchKeyword ? `“${searchKeyword}” 的搜索结果` : '精选好物' }}</h2></div><span>{{ filteredProducts.length }} 件商品</span></div>
         <div v-if="loading" class="empty">正在加载商品…</div>
         <div v-else class="product-grid">
-          <article v-for="product in products" :key="product.id" :class="['product-card', `tone-${product.id % 4}`]">
+          <article v-for="product in filteredProducts" :key="product.id" :class="['product-card', `tone-${product.id % 4}`]">
             <div class="product-visual"><span class="item-no">0{{ product.id }}</span><span class="product-mark">{{ product.name?.slice(0, 1) }}</span><small>精选现货</small></div>
             <div class="product-info"><p>{{ product.name }}</p><small>{{ product.description || '品质好物，现货发售' }}</small><div><strong>¥{{ Number(product.price).toFixed(2) }}</strong><button @click="addCart(product)">加入购物车 <b>+</b></button></div></div>
           </article>
