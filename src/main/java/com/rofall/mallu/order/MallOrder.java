@@ -26,9 +26,13 @@ public class MallOrder {
 
     public MallOrder(String orderNo, Long userId, Long addressId, Long userCouponId, BigDecimal totalAmount,
                      BigDecimal discountAmount, BigDecimal payAmount) {
+        this(orderNo, userId, addressId, userCouponId, totalAmount, discountAmount, payAmount, 30);
+    }
+    public MallOrder(String orderNo, Long userId, Long addressId, Long userCouponId, BigDecimal totalAmount,
+                     BigDecimal discountAmount, BigDecimal payAmount, int timeoutMinutes) {
         this.orderNo = orderNo; this.userId = userId; this.addressId = addressId; this.userCouponId = userCouponId;
         this.totalAmount = totalAmount; this.discountAmount = discountAmount; this.payAmount = payAmount;
-        this.status = "PENDING_PAYMENT"; this.createdAt = LocalDateTime.now(); this.expiresAt = createdAt.plusMinutes(30);
+        this.status = "PENDING_PAYMENT"; this.createdAt = LocalDateTime.now(); this.expiresAt = createdAt.plusMinutes(timeoutMinutes);
     }
     public boolean pendingPayment() { return "PENDING_PAYMENT".equals(status); }
     public void cancel() { if (!pendingPayment()) throw new IllegalStateException("订单当前不可取消"); status = "CANCELLED"; }

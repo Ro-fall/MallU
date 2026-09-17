@@ -20,6 +20,7 @@ import com.rofall.mallu.seckill.SeckillOrderRepository;
 import com.rofall.mallu.seckill.SeckillRedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,8 @@ public class OrderService {
     private final SeckillOrderRepository seckillOrderRepository;
     private final SeckillGoodsRepository seckillGoodsRepository;
     private final SeckillRedisService seckillRedisService;
+    @Value("${mallu.order.timeout-minutes:30}")
+    private int timeoutMinutes;
 
     @Transactional
     public OrderResponse create(OrderCreateRequest request) {
@@ -79,7 +82,7 @@ public class OrderService {
         BigDecimal discount = OrderAmountCalculator.discount(total, coupon);
         BigDecimal pay = total.subtract(discount).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
         String orderNo = "MO" + System.currentTimeMillis() + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        MallOrder order = orderRepository.save(new MallOrder(orderNo, userId, request.addressId(), request.userCouponId(), total, discount, pay));
+        MallOrder order = orderRepository.save(new MallOrder(orderNo, userId, request.addressId(), request.userCouponId(), total, discount, pay, timeoutMinutes));
         if (userCoupon != null) userCoupon.use(orderNo);
         List<OrderItem> items = new ArrayList<>();
         for (CartItem cartItem : cartItems) {

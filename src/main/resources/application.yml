@@ -44,5 +44,7 @@ mallu:
   seckill:
     retry-delay-ms: ${MALLU_SECKILL_RETRY_DELAY_MS:3000}
     max-retries: ${MALLU_SECKILL_MAX_RETRIES:3}
+    test-fail-attempts: ${MALLU_SECKILL_TEST_FAIL_ATTEMPTS:0}
   order:
     timeout-minutes: ${MALLU_ORDER_TIMEOUT_MINUTES:30}
+    timeout-scan-ms: ${MALLU_ORDER_TIMEOUT_SCAN_MS:60000}

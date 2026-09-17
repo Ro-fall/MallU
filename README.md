@@ -101,6 +101,9 @@ RabbitMQ 声明主队列、3 秒延迟重试队列和死信队列。消费者手
 - `scripts/api-redis-reliability-smoke.ps1`：Redis 健康、Token 原子消费、重复提交与购物车绑定；
 - `scripts/api-order-rate-limit-smoke.ps1`：第 11 次下单请求触发 `4291` 限流；
 - `scripts/api-seckill-smoke.ps1`：Redis Lua 秒杀预扣、RabbitMQ 消费、结果轮询与一人一单。
+- `scripts/api-seckill-failure-smoke.ps1`：消费者重试、死信、Redis 补偿与失败结果（需测试故障开关）；
+- `scripts/api-seckill-concurrency-smoke.ps1`：20 用户并发抢 10 件，验证无超卖；
+- `scripts/api-order-timeout-smoke.ps1`：订单超时关闭与库存回滚（需测试超时配置）。
 
 运行接口冒烟前先执行 `reset-fixtures.sql`，并以已设置必要环境变量的方式启动应用；随后在仓库根目录运行：
 
@@ -133,4 +136,21 @@ Redis 可靠性冒烟脚本：
 .\scripts\api-redis-reliability-smoke.ps1
 .\scripts\api-order-rate-limit-smoke.ps1
 .\scripts\api-seckill-smoke.ps1
+```
+
+故障、并发与超时演练都应先运行 `reset-fixtures.sql`。消费者最终失败测试需要在启动前仅为当前 PowerShell 会话设置 `MALLU_SECKILL_TEST_FAIL_ATTEMPTS=4`；超时测试需要设置 `MALLU_ORDER_TIMEOUT_MINUTES=0`、`MALLU_ORDER_TIMEOUT_SCAN_MS=1000`。它们默认值分别为 `0`、`30`、`60000`，不会在正常运行时触发故障或立即关闭订单。
+
+```powershell
+# 消费者重试 3 次后进入死信并补偿
+$env:MALLU_SECKILL_TEST_FAIL_ATTEMPTS = '4'
+.\scripts\start-local.ps1
+.\scripts\api-seckill-failure-smoke.ps1
+.\scripts\stop-local.ps1
+
+# 立即超时测试
+$env:MALLU_ORDER_TIMEOUT_MINUTES = '0'
+$env:MALLU_ORDER_TIMEOUT_SCAN_MS = '1000'
+.\scripts\start-local.ps1
+.\scripts\api-order-timeout-smoke.ps1
+.\scripts\stop-local.ps1
 ```

@@ -20,7 +20,7 @@ public class OrderTimeoutScheduler {
     private final SeckillGoodsRepository seckillGoodsRepository;
     private final SeckillRedisService seckillRedisService;
 
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelayString = "${mallu.order.timeout-scan-ms:60000}")
     @Transactional
     public void closeExpiredOrders() {
         for (MallOrder order : orderRepository.findByStatusAndExpiresAtBefore("PENDING_PAYMENT", LocalDateTime.now())) {

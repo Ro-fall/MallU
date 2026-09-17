@@ -10,6 +10,7 @@ import com.rofall.mallu.order.OrderItem;
 import com.rofall.mallu.order.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -24,6 +25,8 @@ public class SeckillOrderProcessor {
     private final AddressRepository addressRepository;
     private final MallOrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    @Value("${mallu.order.timeout-minutes:30}")
+    private int timeoutMinutes;
 
     @Transactional
     public Long create(SeckillOrderMessage message) {
@@ -40,7 +43,7 @@ public class SeckillOrderProcessor {
         product.decreaseStock(1);
         String orderNo = "MS" + System.currentTimeMillis() + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         MallOrder order = orderRepository.save(new MallOrder(orderNo, message.userId(), message.addressId(), null,
-                goods.getSeckillPrice(), BigDecimal.ZERO, goods.getSeckillPrice()));
+                goods.getSeckillPrice(), BigDecimal.ZERO, goods.getSeckillPrice(), timeoutMinutes));
         orderItemRepository.save(new OrderItem(order.getId(), product.getId(), product.getName(), goods.getSeckillPrice(), 1));
         seckillOrderRepository.save(new SeckillOrder(goods.getId(), order.getId(), message.userId()));
         return order.getId();
