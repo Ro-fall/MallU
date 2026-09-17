@@ -72,13 +72,25 @@ Swagger 启动后位于 `/swagger-ui/index.html`。
 
 ## 当前已实现
 
-当前已落地：统一响应与异常处理、JWT 鉴权、注册登录、当前用户积分、分类、推荐、分页商品、搜索、商品详情、地址管理、购物车库存校验、优惠券领取、部分购物车结算、订单列表与详情、订单取消库存/优惠券回滚，以及模拟支付积分。
+当前已落地：统一响应与异常处理、JWT 鉴权、注册登录、当前用户积分、分类、推荐、分页商品、搜索、商品详情、地址管理、购物车库存校验、优惠券领取、部分购物车结算、订单列表与详情、订单取消/超时库存回滚、模拟支付积分、Redis 健康检查、幂等 Token、下单限流，以及 RabbitMQ 秒杀异步订单。
 
 ## 开发路线图
 
-- Redis 健康检查、限流、幂等 Token 和 Lua 秒杀库存预扣；
-- RabbitMQ 异步下单、手动 ACK、重试、死信与库存资格补偿；
-- 扩展接口自动化、并发测试和故障注入脚本。
+- 扩展并发压测、消息失败注入和死信消费观测脚本。
+
+## 秒杀与 RabbitMQ
+
+秒杀请求使用 Redis Lua 原子完成库存预扣和一人一单资格，然后投递 RabbitMQ；调用方通过结果接口轮询订单状态。
+
+```text
+POST /api/seckill/goods/{goodsId}/orders
+  → Redis Lua 预扣
+  → mallu.seckill.order.queue
+  → 消费者事务创建订单
+  → GET /api/seckill/goods/{goodsId}/result
+```
+
+RabbitMQ 声明主队列、3 秒延迟重试队列和死信队列。消费者手动 ACK；处理失败会最多重试 3 次，最终进入死信队列并补偿 Redis 资格/库存、标记秒杀失败。MySQL 的 `(user_id, seckill_goods_id)` 唯一索引是最终幂等兜底。订单取消或超时关闭时同时回补普通库存、秒杀库存与 Redis 资格。
 
 所有业务接口只提供后端 API，不包含前端工程。
 
@@ -86,6 +98,9 @@ Swagger 启动后位于 `/swagger-ui/index.html`。
 
 - `mvn test`：金额规则单元测试，覆盖满减门槛和折扣券计算；
 - `scripts/api-order-smoke.ps1`：真实 HTTP 冒烟，覆盖注册、地址、领券、部分结算、取消库存回补、优惠券释放、模拟支付与积分。
+- `scripts/api-redis-reliability-smoke.ps1`：Redis 健康、Token 原子消费、重复提交与购物车绑定；
+- `scripts/api-order-rate-limit-smoke.ps1`：第 11 次下单请求触发 `4291` 限流；
+- `scripts/api-seckill-smoke.ps1`：Redis Lua 秒杀预扣、RabbitMQ 消费、结果轮询与一人一单。
 
 运行接口冒烟前先执行 `reset-fixtures.sql`，并以已设置必要环境变量的方式启动应用；随后在仓库根目录运行：
 
@@ -116,4 +131,6 @@ Redis 可靠性冒烟脚本：
 
 ```powershell
 .\scripts\api-redis-reliability-smoke.ps1
+.\scripts\api-order-rate-limit-smoke.ps1
+.\scripts\api-seckill-smoke.ps1
 ```

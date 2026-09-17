@@ -30,6 +30,7 @@ spring:
     listener:
       simple:
         acknowledge-mode: manual
+        prefetch: 10
   sql:
     init:
       mode: never
@@ -40,3 +41,8 @@ mallu:
     expiration-seconds: ${MALLU_JWT_EXPIRATION_SECONDS:7200}
   mq:
     enabled: ${MALLU_MQ_ENABLED:true}
+  seckill:
+    retry-delay-ms: ${MALLU_SECKILL_RETRY_DELAY_MS:3000}
+    max-retries: ${MALLU_SECKILL_MAX_RETRIES:3}
+  order:
+    timeout-minutes: ${MALLU_ORDER_TIMEOUT_MINUTES:30}

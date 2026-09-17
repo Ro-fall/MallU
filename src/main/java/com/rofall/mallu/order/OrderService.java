@@ -15,6 +15,9 @@ import com.rofall.mallu.reliability.OrderRateLimitService;
 import com.rofall.mallu.reliability.OrderTokenService;
 import com.rofall.mallu.user.MallUser;
 import com.rofall.mallu.user.MallUserRepository;
+import com.rofall.mallu.seckill.SeckillGoodsRepository;
+import com.rofall.mallu.seckill.SeckillOrderRepository;
+import com.rofall.mallu.seckill.SeckillRedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -37,6 +40,9 @@ public class OrderService {
     private final MallUserRepository userRepository;
     private final OrderTokenService orderTokenService;
     private final OrderRateLimitService orderRateLimitService;
+    private final SeckillOrderRepository seckillOrderRepository;
+    private final SeckillGoodsRepository seckillGoodsRepository;
+    private final SeckillRedisService seckillRedisService;
 
     @Transactional
     public OrderResponse create(OrderCreateRequest request) {
@@ -99,6 +105,11 @@ public class OrderService {
         List<OrderItem> items = orderItemRepository.findByOrderIdOrderByIdAsc(order.getId());
         for (OrderItem item : items) productRepository.findById(item.getProductId()).ifPresent(product -> product.increaseStock(item.getQuantity()));
         if (order.getUserCouponId() != null) userCouponRepository.findById(order.getUserCouponId()).ifPresent(UserCoupon::release);
+        seckillOrderRepository.findByOrderId(order.getId()).ifPresent(seckillOrder -> {
+            seckillGoodsRepository.findById(seckillOrder.getSeckillGoodsId()).ifPresent(goods -> goods.increaseStock());
+            seckillOrder.cancel();
+            seckillRedisService.compensate(seckillOrder.getUserId(), seckillOrder.getSeckillGoodsId());
+        });
         order.cancel();
         return response(order, items);
     }
