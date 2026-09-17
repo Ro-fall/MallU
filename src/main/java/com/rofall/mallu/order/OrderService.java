@@ -11,6 +11,8 @@ import com.rofall.mallu.coupon.CouponRepository;
 import com.rofall.mallu.coupon.UserCoupon;
 import com.rofall.mallu.coupon.UserCouponRepository;
 import com.rofall.mallu.security.UserContext;
+import com.rofall.mallu.reliability.OrderRateLimitService;
+import com.rofall.mallu.reliability.OrderTokenService;
 import com.rofall.mallu.user.MallUser;
 import com.rofall.mallu.user.MallUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,13 +35,17 @@ public class OrderService {
     private final CouponRepository couponRepository;
     private final UserCouponRepository userCouponRepository;
     private final MallUserRepository userRepository;
+    private final OrderTokenService orderTokenService;
+    private final OrderRateLimitService orderRateLimitService;
 
     @Transactional
     public OrderResponse create(OrderCreateRequest request) {
         Long userId = UserContext.requireUserId();
+        orderRateLimitService.check(userId);
         if (new HashSet<>(request.cartItemIds()).size() != request.cartItemIds().size()) {
             throw new BusinessException(4004, HttpStatus.BAD_REQUEST, "购物车项不能重复");
         }
+        orderTokenService.consume(userId, request.idempotencyToken(), request.cartItemIds());
         addressRepository.findByIdAndUserId(request.addressId(), userId)
                 .orElseThrow(() -> new BusinessException(4043, HttpStatus.NOT_FOUND, "收货地址不存在"));
         List<CartItem> cartItems = cartItemRepository.findByIdInAndUserId(request.cartItemIds(), userId);

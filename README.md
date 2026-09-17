@@ -94,3 +94,26 @@ Swagger 启动后位于 `/swagger-ui/index.html`。
 ```
 
 脚本会创建一名随机测试用户。完成一次演示后可再次运行 `reset-fixtures.sql` 清理测试数据。
+
+## Redis 可靠性与本机启停
+
+- `GET /api/health/redis`：返回 Redis 可用状态；
+- `POST /api/orders/tokens`：为指定 `cartItemIds` 签发 5 分钟有效的下单 Token；创建订单必须携带该 Token；
+- 同一 Token 通过 Redis Lua 原子校验并删除，重复提交返回 `4096`；Token 与购物车项不匹配返回 `4097`；
+- 创建订单按用户做 Redis 固定窗口限流（每分钟 10 次）；Redis 不可用时，Token 和限流等强依赖接口在约 1 秒内返回 `503 / 8001`，不降级执行写操作。
+
+先设置本机环境变量、执行 `mvn package`，然后可用以下脚本管理本地进程：
+
+```powershell
+.\scripts\start-local.ps1
+# 运行接口测试后
+.\scripts\stop-local.ps1
+```
+
+`start-local.ps1` 会检查 6379：若没有 Redis，它仅绑定 `127.0.0.1` 启动一个本地 Redis 并记录 PID；若已有 Redis，则只复用且不会在停止时关闭它。`stop-local.ps1` 只终止脚本自身记录的 MallU/Redis 进程树。
+
+Redis 可靠性冒烟脚本：
+
+```powershell
+.\scripts\api-redis-reliability-smoke.ps1
+```

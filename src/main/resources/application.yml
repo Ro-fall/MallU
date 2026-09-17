@@ -20,6 +20,8 @@ spring:
     redis:
       host: ${MALLU_REDIS_HOST:localhost}
       port: ${MALLU_REDIS_PORT:6379}
+      connect-timeout: ${MALLU_REDIS_CONNECT_TIMEOUT:1s}
+      timeout: ${MALLU_REDIS_TIMEOUT:1s}
   rabbitmq:
     host: ${MALLU_RABBITMQ_HOST:localhost}
     port: ${MALLU_RABBITMQ_PORT:5672}

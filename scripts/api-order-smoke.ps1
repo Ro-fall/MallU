@@ -29,9 +29,10 @@ $address = Invoke-Json 'POST' '/api/addresses' @{
 $coupon = Invoke-Json 'POST' '/api/coupons/1/claim' $null $headers
 $cartOne = Invoke-Json 'POST' '/api/cart-items' @{ productId = 1; quantity = 1 } $headers
 $cartTwo = Invoke-Json 'POST' '/api/cart-items' @{ productId = 3; quantity = 2 } $headers
+$firstToken = Invoke-Json 'POST' '/api/orders/tokens' @{ cartItemIds = @($cartOne.data.id) } $headers
 
 $firstOrder = Invoke-Json 'POST' '/api/orders' @{
-    addressId = $address.data.id; userCouponId = $coupon.data.userCouponId; cartItemIds = @($cartOne.data.id)
+    addressId = $address.data.id; userCouponId = $coupon.data.userCouponId; cartItemIds = @($cartOne.data.id); idempotencyToken = $firstToken.data.token
 } $headers
 Assert-Equal $firstOrder.data.status 'PENDING_PAYMENT' '订单状态错误'
 Assert-Equal $firstOrder.data.discountAmount 100 '满减金额错误'
@@ -45,7 +46,8 @@ Assert-Equal $cancelled.data.status 'CANCELLED' '取消订单失败'
 $coupons = Invoke-Json 'GET' '/api/coupons/mine' $null $headers
 Assert-Equal $coupons.data[0].status 'AVAILABLE' '取消订单后优惠券未释放'
 
-$secondOrder = Invoke-Json 'POST' '/api/orders' @{ addressId = $address.data.id; cartItemIds = @($cartTwo.data.id) } $headers
+$secondToken = Invoke-Json 'POST' '/api/orders/tokens' @{ cartItemIds = @($cartTwo.data.id) } $headers
+$secondOrder = Invoke-Json 'POST' '/api/orders' @{ addressId = $address.data.id; cartItemIds = @($cartTwo.data.id); idempotencyToken = $secondToken.data.token } $headers
 $paid = Invoke-Json 'POST' "/api/orders/$($secondOrder.data.id)/pay" $null $headers
 Assert-Equal $paid.data.status 'PAID' '模拟支付失败'
 $profile = Invoke-Json 'GET' '/api/auth/me' $null $headers

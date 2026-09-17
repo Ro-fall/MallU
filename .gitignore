@@ -8,3 +8,4 @@ application-local.yml
 .env
 maven-local-settings.xml
 .m2/
+.runtime/
