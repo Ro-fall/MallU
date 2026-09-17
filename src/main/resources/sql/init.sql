@@ -8,7 +8,7 @@ CREATE TABLE mall_user (
     username VARCHAR(64) NOT NULL UNIQUE,
     password_hash VARCHAR(100) NOT NULL,
     points INT NOT NULL DEFAULT 0,
-    status TINYINT NOT NULL DEFAULT 1,
+    status BIT NOT NULL DEFAULT b'1',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -22,7 +22,7 @@ CREATE TABLE address (
     city VARCHAR(64) NOT NULL,
     district VARCHAR(64) NOT NULL,
     detail VARCHAR(255) NOT NULL,
-    is_default TINYINT NOT NULL DEFAULT 0,
+    is_default BIT NOT NULL DEFAULT b'0',
     CONSTRAINT fk_address_user FOREIGN KEY (user_id) REFERENCES mall_user(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -30,7 +30,7 @@ CREATE TABLE category (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(64) NOT NULL UNIQUE,
     sort_order INT NOT NULL DEFAULT 0,
-    status TINYINT NOT NULL DEFAULT 1
+    status BIT NOT NULL DEFAULT b'1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE product (
@@ -40,8 +40,8 @@ CREATE TABLE product (
     description VARCHAR(512),
     price DECIMAL(10,2) NOT NULL,
     stock INT NOT NULL DEFAULT 0,
-    recommended TINYINT NOT NULL DEFAULT 0,
-    status TINYINT NOT NULL DEFAULT 1,
+    recommended BIT NOT NULL DEFAULT b'0',
+    status BIT NOT NULL DEFAULT b'1',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_product_category(category_id),
@@ -70,7 +70,7 @@ CREATE TABLE coupon (
     start_time DATETIME NOT NULL,
     end_time DATETIME NOT NULL,
     remaining_count INT NOT NULL,
-    status TINYINT NOT NULL DEFAULT 1
+    status BIT NOT NULL DEFAULT b'1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE user_coupon (
@@ -118,7 +118,7 @@ CREATE TABLE seckill_activity (
     name VARCHAR(128) NOT NULL,
     start_time DATETIME NOT NULL,
     end_time DATETIME NOT NULL,
-    status TINYINT NOT NULL DEFAULT 1
+    status BIT NOT NULL DEFAULT b'1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE seckill_goods (

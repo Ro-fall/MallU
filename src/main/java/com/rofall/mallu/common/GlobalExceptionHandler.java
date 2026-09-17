@@ -2,6 +2,7 @@ package com.rofall.mallu.common;
 
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -17,6 +18,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
     public ResponseEntity<ApiResponse<Void>> handleValidation(Exception exception) {
         return ResponseEntity.badRequest().body(ApiResponse.failure(4000, "请求参数不合法"));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(NoResourceFoundException exception) {
+        return ResponseEntity.status(404).body(ApiResponse.failure(4040, "请求资源不存在"));
     }
 
     @ExceptionHandler(Exception.class)
