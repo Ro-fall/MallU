@@ -22,6 +22,7 @@
 | `api-redis-outage-smoke.ps1` | REDIS-002~003、014、028 | 已实跑通过 |
 | `api-redis-token-edge.ps1` | REDIS-005、007~008 | 已实跑通过 |
 | `api-redis-token-concurrency.ps1` | REDIS-013 | 已实跑通过 |
+| `api-order-rate-limit-isolation.ps1` | REDIS-025 | 已实跑通过 |
 
 ## 落地批次
 
