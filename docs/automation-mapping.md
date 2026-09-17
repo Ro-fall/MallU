@@ -16,6 +16,7 @@
 | `api-order-marketing-p0.ps1` | ORDER-003~008、013~016、020、024~028、032、034~037、051；MKT-001~003、008~010、024 | 已实跑通过 |
 | `api-catalog-edge.ps1` | CAT-020~023、026；CART-017、020 | 已实跑通过 |
 | `api-seckill-edge.ps1` | SEC-002、005~010、046、050 | 已实跑通过 |
+| `api-seckill-stock-limit.ps1` | SEC-012、021~023 | 已实跑通过 |
 
 ## 落地批次
 
