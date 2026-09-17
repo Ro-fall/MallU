@@ -23,8 +23,8 @@ spring:
   rabbitmq:
     host: ${MALLU_RABBITMQ_HOST:localhost}
     port: ${MALLU_RABBITMQ_PORT:5672}
-    username: ${MALLU_RABBITMQ_USERNAME:guest}
-    password: ${MALLU_RABBITMQ_PASSWORD:guest}
+    username: ${MALLU_RABBITMQ_USERNAME}
+    password: ${MALLU_RABBITMQ_PASSWORD}
     listener:
       simple:
         acknowledge-mode: manual

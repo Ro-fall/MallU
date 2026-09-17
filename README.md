@@ -1,15 +1,17 @@
-# MallU
+# MallU：电商自动化与可靠性测试靶场
 
-MallU 是一个无前端的最小商城 API 测试靶场。它以单体 Spring Boot 应用承载用户、商品、购物车、订单、营销与秒杀业务，用于接口自动化、并发和中间件可靠性测试。
+MallU（E-commerce Automation & Reliability Testing Sandbox）是一个无前端的最小商城 API 测试靶场。它以单体 Spring Boot 应用承载电商核心链路，服务于接口自动化、并发、幂等和中间件故障测试。
 
-## 范围
+## 项目目标与边界
+
+目标范围：
 
 - 用户与 JWT 鉴权、地址管理；
 - 分类、推荐、搜索、商品与库存；
 - 购物车与选择性结算；
 - 订单、优惠券、积分、取消回滚；
 - Redis Lua 秒杀预扣、RabbitMQ 异步下单、重试和死信；
-- 可重复的测试数据准备与清理。
+- 可重复的测试数据准备、重置与清理。
 
 不包含前端、后台管理端、Elasticsearch、MongoDB、微服务或真实支付。
 
@@ -17,8 +19,15 @@ MallU 是一个无前端的最小商城 API 测试靶场。它以单体 Spring B
 
 - Java 21
 - MySQL 8（数据库名：`mallu`）
-- Redis 7+
-- RabbitMQ 3.12+
+- Redis 7+（后续秒杀模块启用）
+- RabbitMQ 3.12+（后续秒杀模块启用）
+
+## 安全约定
+
+- 仓库不保存数据库、JWT 或 RabbitMQ 的真实密码；`.env`、`application-local.yml`、Maven 本机配置已被 Git 忽略。
+- 启动前必须在本机设置 `MALLU_DB_PASSWORD` 与一个不少于 32 字符的 `MALLU_JWT_SECRET`；不要把它们写进 `application.yml`、README、提交信息或截图。
+- RabbitMQ 用户名与密码必须通过 `MALLU_RABBITMQ_USERNAME` 和 `MALLU_RABBITMQ_PASSWORD` 提供；即便是本机开发，也不将 `guest/guest` 等凭据提交到配置文件。不要将 5672、15672 暴露到公网。
+- `clean-local.sql` 会删除整个 `mallu` 数据库，仅限确认无误的本地环境使用；日常回归请使用 `reset-fixtures.sql`。
 
 ## 数据库脚本与重置策略
 
@@ -44,12 +53,29 @@ MallU 是一个无前端的最小商城 API 测试靶场。它以单体 Spring B
 
 `reset-fixtures.sql` 只影响 `mallu` 库中的表；Redis 的运行时 Key 由测试前置步骤写入并设置过期时间，RabbitMQ 的队列由秒杀模块启动时声明。
 
-再设置本机环境变量：`MALLU_DB_PASSWORD`、`MALLU_JWT_SECRET`。其他连接参数可覆盖 `application.yml` 中的默认本机地址。
+设置本机环境变量（PowerShell 示例，不要把真实值提交到仓库）：
+
+```powershell
+$env:MALLU_DB_PASSWORD = '<your-local-password>'
+$env:MALLU_JWT_SECRET = '<at-least-32-character-local-secret>'
+$env:MALLU_RABBITMQ_USERNAME = '<local-rabbitmq-user>'
+$env:MALLU_RABBITMQ_PASSWORD = '<local-rabbitmq-password>'
+```
+
+其他连接参数可通过 `MALLU_DB_URL`、`MALLU_DB_USERNAME`、`MALLU_REDIS_HOST`、`MALLU_RABBITMQ_HOST` 等环境变量覆盖 `application.yml` 中的本机默认地址。
 
 Swagger 启动后位于 `/swagger-ui/index.html`。
 
-## 已实现的开发基线
+## 当前已实现
 
 当前已落地：统一响应与异常处理、JWT 鉴权、注册登录、当前用户积分、分类、推荐、分页商品、搜索、商品详情、地址管理和购物车库存校验。
 
-下一阶段会实现选择性购物车结算、订单/优惠券/积分事务，以及 Redis 与 RabbitMQ 秒杀链路；所有业务接口只提供后端 API，不包含前端工程。
+## 开发路线图
+
+- 选择性购物车结算：下单请求携带 `cartItemIds`，仅结算并删除选中项；
+- 订单、优惠券、积分与取消回滚事务；
+- Redis 健康检查、限流、幂等 Token 和 Lua 秒杀库存预扣；
+- RabbitMQ 异步下单、手动 ACK、重试、死信与库存资格补偿；
+- API 自动化、并发测试和故障注入脚本。
+
+所有业务接口只提供后端 API，不包含前端工程。
