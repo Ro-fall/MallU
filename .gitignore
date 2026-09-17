@@ -10,3 +10,4 @@ maven-local-settings.xml
 .m2/
 .runtime/
 test-results/
+dump.rdb

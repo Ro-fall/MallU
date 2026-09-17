@@ -19,6 +19,7 @@
 | `api-seckill-stock-limit.ps1` | SEC-012、021~023 | 已实跑通过 |
 | `api-seckill-lifecycle.ps1` | SEC-014~018、051~054 | 已实跑通过 |
 | `api-seckill-timeout-smoke.ps1` | SEC-055~057 | 已实跑通过 |
+| `api-redis-outage-smoke.ps1` | REDIS-002~003、014、028 | 已实跑通过 |
 
 ## 落地批次
 

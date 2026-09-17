@@ -1,0 +1,7 @@
+param([string]$BaseUrl='http://localhost:8080',[int]$RedisPid=(Get-Content "$PSScriptRoot\..\.runtime\redis-started-by-mallu.pid"))
+$ErrorActionPreference='Stop'
+function E($a,$b,$n){if($a-ne$b){throw "$n expected=$b actual=$a"}}
+$u="redis_outage_$(Get-Random -Minimum 100000 -Maximum 999999)";$r=Invoke-RestMethod "$BaseUrl/api/auth/register" -Method Post -ContentType application/json -Body (@{username=$u;password='RedisOutage_2026'}|ConvertTo-Json);$h=@{Authorization="Bearer $($r.data.token)"}
+taskkill.exe /PID $RedisPid /T /F | Out-Null;Start-Sleep -Milliseconds 500
+$health=Invoke-WebRequest "$BaseUrl/api/health/redis" -SkipHttpErrorCheck;$token=Measure-Command{$down=Invoke-WebRequest "$BaseUrl/api/orders/tokens" -Method Post -Headers $h -ContentType application/json -Body '{"cartItemIds":[1]}' -SkipHttpErrorCheck};E $health.StatusCode 200 'REDIS-002';E (($health.Content|ConvertFrom-Json).data.available) $false 'REDIS-002 available';E $down.StatusCode 503 'REDIS-014';E (($down.Content|ConvertFrom-Json).code) 8001 'REDIS-014 code';if($token.TotalMilliseconds-gt2500){throw 'REDIS-028 响应过慢'}
+$p=Start-Process 'D:\Software\redis\redis-7.2.4\redis-server.exe' -ArgumentList @('--bind','127.0.0.1','--protected-mode','yes','--port','6379','--appendonly','no') -WindowStyle Hidden -PassThru;$p.Id|Set-Content "$PSScriptRoot\..\.runtime\redis-started-by-mallu.pid";Start-Sleep -Seconds 1;E (& 'D:\Software\redis\redis-7.2.4\redis-cli.exe' -h 127.0.0.1 ping) 'PONG' 'REDIS-003';Write-Host 'PASS: Redis outage and recovery.'
