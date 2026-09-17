@@ -12,7 +12,7 @@
 | `api-seckill-failure-smoke.ps1` | SEC-035、037、039 | 已实跑 |
 | `api-seckill-concurrency-smoke.ps1` | SEC-024、027 | 已实跑 |
 | `api-order-timeout-smoke.ps1` | ORDER-040~041 | 已实跑 |
-| `api-auth-catalog-cart-p0.ps1` | AUTH-002~016、025、027；CAT-001~004、006~007、009~012、014、018~019；CART-001~004、008、014~022、025~027、029、031 | 已实现，待首次完整实跑 |
+| `api-auth-catalog-cart-p0.ps1` | AUTH-002~016、025、027；CAT-001~004、006~007、009~012、014、018~019；CART-001~004、008、014~022、025~027、029、031 | 已实跑通过 |
 
 ## 落地批次
 

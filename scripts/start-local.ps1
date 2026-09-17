@@ -11,18 +11,23 @@ if (-not $env:MALLU_DB_PASSWORD -or -not $env:MALLU_JWT_SECRET -or -not $env:MAL
     throw '请先设置 MALLU_DB_PASSWORD、MALLU_JWT_SECRET、MALLU_RABBITMQ_USERNAME、MALLU_RABBITMQ_PASSWORD。'
 }
 
-$redisListening = Get-NetTCPConnection -LocalPort 6379 -State Listen -ErrorAction SilentlyContinue
-if (-not $redisListening) {
+$redisCli = Get-Command redis-cli.exe -ErrorAction Stop
+function Test-RedisReady {
+    $ping = & $redisCli.Source -h 127.0.0.1 -p 6379 ping 2>$null
+    return $LASTEXITCODE -eq 0 -and $ping -eq 'PONG'
+}
+
+if (-not (Test-RedisReady)) {
     $redis = Get-Command redis-server.exe -ErrorAction Stop
     $redisLog = Join-Path $runtime 'redis.out'
     $redisErrorLog = Join-Path $runtime 'redis.err'
     $redisProcess = Start-Process -FilePath $redis.Source -ArgumentList @('--bind', '127.0.0.1', '--protected-mode', 'yes', '--port', '6379', '--appendonly', 'no') -RedirectStandardOutput $redisLog -RedirectStandardError $redisErrorLog -WindowStyle Hidden -PassThru
     $redisProcess.Id | Set-Content (Join-Path $runtime 'redis-started-by-mallu.pid')
     for ($attempt = 0; $attempt -lt 15; $attempt++) {
-        if (Get-NetTCPConnection -LocalPort 6379 -State Listen -ErrorAction SilentlyContinue) { break }
+        if (Test-RedisReady) { break }
         Start-Sleep -Milliseconds 200
     }
-    if (-not (Get-NetTCPConnection -LocalPort 6379 -State Listen -ErrorAction SilentlyContinue)) { throw 'Redis 未能在 6379 启动，请检查 .runtime/redis.out 和 .runtime/redis.err。' }
+    if (-not (Test-RedisReady)) { throw 'Redis 未能在 6379 启动，请检查 .runtime/redis.out 和 .runtime/redis.err。' }
     Write-Host "Redis started by MallU (PID $($redisProcess.Id))." -ForegroundColor Green
 } else { Write-Host 'Redis already listens on 6379; MallU will reuse it and will not stop it.' -ForegroundColor Yellow }
 
