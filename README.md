@@ -97,6 +97,7 @@ RabbitMQ 声明主队列、3 秒延迟重试队列和死信队列。消费者手
 ## 当前自动化测试
 
 - `mvn test`：金额规则单元测试，覆盖满减门槛和折扣券计算；
+- `scripts/api-auth-catalog-cart-p0.ps1`：P0 回归，覆盖认证校验、公共商品目录、地址默认规则、购物车合并、库存校验、越权与未登录拦截；
 - `scripts/api-order-smoke.ps1`：真实 HTTP 冒烟，覆盖注册、地址、领券、部分结算、取消库存回补、优惠券释放、模拟支付与积分。
 - `scripts/api-redis-reliability-smoke.ps1`：Redis 健康、Token 原子消费、重复提交与购物车绑定；
 - `scripts/api-order-rate-limit-smoke.ps1`：第 11 次下单请求触发 `4291` 限流；
@@ -109,6 +110,7 @@ RabbitMQ 声明主队列、3 秒延迟重试队列和死信队列。消费者手
 
 ```powershell
 .\scripts\api-order-smoke.ps1
+.\scripts\api-auth-catalog-cart-p0.ps1
 ```
 
 脚本会创建一名随机测试用户。完成一次演示后可再次运行 `reset-fixtures.sql` 清理测试数据。
