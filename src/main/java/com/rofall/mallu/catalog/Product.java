@@ -30,4 +30,15 @@ public class Product {
     private Boolean status;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    public void decreaseStock(int quantity) {
+        if (stock < quantity) {
+            throw new IllegalStateException("商品库存不足");
+        }
+        stock -= quantity;
+    }
+
+    public void increaseStock(int quantity) {
+        stock += quantity;
+    }
 }
