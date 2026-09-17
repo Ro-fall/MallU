@@ -16,7 +16,10 @@ public class SeckillRedisService {
             "redis.call('INCR',KEYS[1]); redis.call('DEL',KEYS[2]); return 1;", Long.class);
     private final StringRedisTemplate redis;
     public SeckillRedisService(StringRedisTemplate redis) { this.redis = redis; }
-    public void initialize(SeckillGoods goods) { try { redis.opsForValue().set(stockKey(goods.getId()), String.valueOf(goods.getStock())); } catch (RuntimeException ignored) { } }
+    public void initializeIfAbsent(SeckillGoods goods) {
+        try { redis.opsForValue().setIfAbsent(stockKey(goods.getId()), String.valueOf(goods.getStock())); }
+        catch (RuntimeException ignored) { }
+    }
     public void reserve(Long userId, Long goodsId) {
         Long result; try { result=redis.execute(RESERVE, List.of(stockKey(goodsId), userKey(goodsId,userId)), String.valueOf(Duration.ofHours(2).toSeconds())); } catch (RuntimeException ex) { throw unavailable(); }
         if (result == null || result == -3) throw unavailable();

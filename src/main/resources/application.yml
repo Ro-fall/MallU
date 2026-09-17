@@ -42,6 +42,7 @@ mallu:
   mq:
     enabled: ${MALLU_MQ_ENABLED:true}
   seckill:
+    redis-rebuild-ms: ${MALLU_SECKILL_REDIS_REBUILD_MS:30000}
     retry-delay-ms: ${MALLU_SECKILL_RETRY_DELAY_MS:3000}
     max-retries: ${MALLU_SECKILL_MAX_RETRIES:3}
     test-fail-attempts: ${MALLU_SECKILL_TEST_FAIL_ATTEMPTS:0}

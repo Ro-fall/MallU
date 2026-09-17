@@ -55,6 +55,8 @@ $script = (Resolve-Path 'src/main/resources/sql/reset-fixtures.sql').Path -repla
 mysql --default-character-set=utf8mb4 -uroot -p -e "SOURCE $script"
 ```
 
+完整自动化回归建议执行统一重置脚本；它仅恢复 MallU 夹具、删除 `mallu:*` Redis 键并清空 MallU 自己的三个 MQ 队列。详见 [测试前置与隔离](docs/test-environment.md)。
+
 `reset-fixtures.sql` 只影响 `mallu` 库中的表；Redis 的运行时 Key 由测试前置步骤写入并设置过期时间，RabbitMQ 的队列由秒杀模块启动时声明。
 
 设置本机环境变量（PowerShell 示例，不要把真实值提交到仓库）：
