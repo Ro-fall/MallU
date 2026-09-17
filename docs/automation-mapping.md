@@ -24,6 +24,7 @@
 | `api-redis-token-concurrency.ps1` | REDIS-013 | 已实跑通过 |
 | `api-order-rate-limit-isolation.ps1` | REDIS-025 | 已实跑通过 |
 | `api-order-state-edge.ps1` | ORDER-007、033、038 | 已实跑通过 |
+| `api-address-cart-edge.ps1` | CART-003、006~008、028 | 已实跑通过 |
 
 ## 落地批次
 
