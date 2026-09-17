@@ -1,0 +1,10 @@
+.idea/
+*.iml
+target/
+*.log
+*.out
+*.err
+application-local.yml
+.env
+maven-local-settings.xml
+.m2/

@@ -1,0 +1,40 @@
+server:
+  port: ${MALLU_SERVER_PORT:8080}
+
+spring:
+  application:
+    name: MallU
+  datasource:
+    url: ${MALLU_DB_URL:jdbc:mysql://localhost:3306/mallu?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${MALLU_DB_USERNAME:root}
+    password: ${MALLU_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Shanghai
+  data:
+    redis:
+      host: ${MALLU_REDIS_HOST:localhost}
+      port: ${MALLU_REDIS_PORT:6379}
+  rabbitmq:
+    host: ${MALLU_RABBITMQ_HOST:localhost}
+    port: ${MALLU_RABBITMQ_PORT:5672}
+    username: ${MALLU_RABBITMQ_USERNAME:guest}
+    password: ${MALLU_RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        acknowledge-mode: manual
+  sql:
+    init:
+      mode: never
+
+mallu:
+  jwt:
+    secret: ${MALLU_JWT_SECRET}
+    expiration-seconds: ${MALLU_JWT_EXPIRATION_SECONDS:7200}
+  mq:
+    enabled: ${MALLU_MQ_ENABLED:true}
