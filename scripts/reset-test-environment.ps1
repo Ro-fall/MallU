@@ -28,7 +28,9 @@ function Invoke-MalluSql([string]$file) {
 
 function Clear-MalluRedisKeys {
     $redisCli = Get-Command redis-cli.exe -ErrorAction Stop
-    $keys = @(& $redisCli.Source -h 127.0.0.1 -p 6379 --scan --pattern 'mallu:*')
+    # RedisWin's redis-cli --scan does not reliably emit results; the test namespace is deliberately
+    # small and isolated, so read only its exact keys before deleting them.
+    $keys = @(& $redisCli.Source -h 127.0.0.1 -p 6379 --raw KEYS 'mallu:*')
     if ($LASTEXITCODE -ne 0) { throw '无法连接 Redis，拒绝执行不完整的测试环境重置。' }
     if ($keys.Count -gt 0) {
         & $redisCli.Source -h 127.0.0.1 -p 6379 del @keys | Out-Null
@@ -59,6 +61,10 @@ if (-not $SkipRabbitMq) { Clear-MalluRabbitMqQueues }
 if (-not $SkipRedisRebuildWait) {
     # The application restores only missing seckill stock keys, so this never overwrites a live Lua reservation.
     Start-Sleep -Seconds 31
+    $stock = & $redisCli.Source -h 127.0.0.1 -p 6379 get 'mallu:seckill:stock:1' 2>$null
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($stock)) {
+        throw '秒杀 Redis 库存键未恢复；请确认 MallU 已启动且健康。'
+    }
 }
 
 Write-Host "PASS: test environment reset (MySQL fixtures restored; Redis MallU keys removed: $redisCount; RabbitMQ cleared: $(-not $SkipRabbitMq))." -ForegroundColor Green
