@@ -17,6 +17,7 @@
 | `api-catalog-edge.ps1` | CAT-020~023、026；CART-017、020 | 已实跑通过 |
 | `api-seckill-edge.ps1` | SEC-002、005~010、046、050 | 已实跑通过 |
 | `api-seckill-stock-limit.ps1` | SEC-012、021~023 | 已实跑通过 |
+| `api-seckill-lifecycle.ps1` | SEC-014~018、051~054 | 已实跑通过 |
 
 ## 落地批次
 
