@@ -39,16 +39,20 @@ MallU（E-commerce Automation & Reliability Testing Sandbox）是一个无前端
 | `src/main/resources/sql/reset-fixtures.sql` | 每次接口回归前 | 清空 MallU 表数据并恢复固定商品、优惠券、秒杀活动；不删库 |
 | `src/main/resources/sql/clean-local.sql` | 完全重建前 | 删除 `mallu` 库，危险操作 |
 
+在仓库根目录执行。以下示例假定 `mysql` 已加入系统 `PATH`；若未加入，请将 `mysql` 替换为本机 MySQL 客户端的绝对路径。
+
 首次初始化：
 
 ```powershell
-& 'D:\Software\MYSQL\bin\mysql.exe' --default-character-set=utf8mb4 -uroot -p -e "SOURCE D:/Code/javacode/MallU/src/main/resources/sql/init.sql"
+$script = (Resolve-Path 'src/main/resources/sql/init.sql').Path -replace '\\', '/'
+mysql --default-character-set=utf8mb4 -uroot -p -e "SOURCE $script"
 ```
 
 日常接口自动化执行前重置夹具：
 
 ```powershell
-& 'D:\Software\MYSQL\bin\mysql.exe' --default-character-set=utf8mb4 -uroot -p -e "SOURCE D:/Code/javacode/MallU/src/main/resources/sql/reset-fixtures.sql"
+$script = (Resolve-Path 'src/main/resources/sql/reset-fixtures.sql').Path -replace '\\', '/'
+mysql --default-character-set=utf8mb4 -uroot -p -e "SOURCE $script"
 ```
 
 `reset-fixtures.sql` 只影响 `mallu` 库中的表；Redis 的运行时 Key 由测试前置步骤写入并设置过期时间，RabbitMQ 的队列由秒杀模块启动时声明。
